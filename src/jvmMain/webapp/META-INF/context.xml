@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiResourceLocking="false" cookies="false">
+
+    <Resource name="jdbc/db_primary"
+              auth="Container"
+              type="javax.sql.DataSource"
+              username="root"
+              password="root"
+              driverClassName="com.mysql.cj.jdbc.Driver"
+              url="jdbc:mysql://db:3306/database"
+              maxTotal="15"
+              maxIdle="3"/>
+
+    <Resource name="jdbc/db_legacy"
+              auth="Container"
+              type="javax.sql.DataSource"
+              username="root"
+              password="root"
+              driverClassName="com.mysql.cj.jdbc.Driver"
+              url="jdbc:mysql://db:3306/legacy"
+              maxTotal="15"
+              maxIdle="3"/>
+
+</Context>
