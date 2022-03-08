@@ -28,18 +28,17 @@ class AuthService(environment: ApplicationEnvironment): KoinComponent {
     private val issuer = environment.config.property("jwt.issuer").getString()
     private val audience = environment.config.property("jwt.audience").getString()
     private val realm = environment.config.property("jwt.realm").getString()
-    private val jwtVerifier: JWTVerifier by lazy {
+    private val jwtVerifier: JWTVerifier =
         JWT.require(Algorithm.HMAC256(secret))
             .withIssuer(issuer)
             .withAudience(audience)
             .build()
-    }
 
     fun tokenForUser(user: User): String {
         return JWT.create()
             .withIssuer(issuer)
             .withAudience(audience)
-            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+            /*.withExpiresAt(Date(System.currentTimeMillis() + 60000))*/
             .withClaim("id", user.id)
             .withClaim("username", user.username)
             .withClaim("email", user.email)
@@ -56,6 +55,7 @@ class AuthService(environment: ApplicationEnvironment): KoinComponent {
         jwt(JwtAuthName) {
             realm = this@AuthService.realm
             verifier(jwtVerifier)
+            validate { JWTPrincipal(it.payload) }
         }
 
         session<UserSession>(SessionAuthName) {

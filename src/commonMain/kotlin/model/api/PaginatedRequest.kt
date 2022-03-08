@@ -19,6 +19,7 @@ data class PaginatedRequest<T: Enum<T>>(
 ) {
 
     companion object {
-        const val DEFAULT_PER_PAGE = 25
+        const val DefaultPage = 0
+        const val DefaultPerPage = 25
     }
 }

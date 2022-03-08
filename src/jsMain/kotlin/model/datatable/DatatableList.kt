@@ -8,5 +8,6 @@ data class DatatableList<T: Enum<T>, R: SortSelectable<T>>(
     val perPage: Int,
     val order: Order?,
     val orderSelect: T?,
+    val fullSize: Int,
     val items: List<R>,
 )

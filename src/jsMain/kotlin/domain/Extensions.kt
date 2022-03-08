@@ -6,6 +6,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.HTMLInputElement
 import react.Props
 import react.PropsWithRef
+import react.StateInstance
 import react.dom.DOMAttributes
 import react.dom.onChange
 
@@ -28,3 +29,5 @@ inline fun Props.unsafeOnClickEvent(crossinline block: () -> Unit) {
 }
 
 inline val User?.isLoggedIn get() = this != null
+
+fun <T> StateInstance<T>.update(block: T.() -> T) = component2().invoke(block)

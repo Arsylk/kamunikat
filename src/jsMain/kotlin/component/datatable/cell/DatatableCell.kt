@@ -1,15 +1,13 @@
 package component.datatable.cell
 
-import component.datatable.DatatableCellKey
-import component.datatable.DatatableItem
 import domain.onClickEvent
 import mui.material.TableCell
 import react.FC
 import react.Props
 import react.dom.html.ReactHTML
 
-external interface DatatableCellProps<T: DatatableItem> : Props {
-    var item: T
+external interface DatatableCellProps<Item: Any> : Props {
+    var item: Item
     var currentPosition: Int
 
     var onCellClick: (() -> Unit)?
@@ -27,8 +25,3 @@ val SimpleDatatableCell = FC<SimpleDatatableCellProps> { props ->
         onClickEvent { props.onClick?.invoke() }
     }
 }
-
-data class DatatableCell<T: DatatableItem>(
-    val key: DatatableCellKey,
-    val fc: FC<DatatableCellProps<T>>
-)

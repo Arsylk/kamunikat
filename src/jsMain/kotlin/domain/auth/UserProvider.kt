@@ -17,9 +17,7 @@ val UserContext = createContext<User?>(null)
 fun ChildrenBuilder.provideUser(block: @ReactDsl ChildrenBuilder.() -> Unit,) {
     val authService by inject<AuthService>()
     val user = produceState<User?>(null) {
-        console.log("produce state init")
-        authService.userFlow().collectLatest {
-            console.log("produce state collected user: $it")
+        authService.userFlow().collect {
             this@produceState.invoke(it)
         }
     }

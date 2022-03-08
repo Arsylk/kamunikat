@@ -21,6 +21,6 @@ data class PaginatedResponse<T: Enum<T>, R: SortSelectable<T>>(
     @SerialName("full_size")
     val fullSize: Int,
 
-    @SerialName("list")
-    val list: List<R>
+    @SerialName("items")
+    val items: List<R>
 )

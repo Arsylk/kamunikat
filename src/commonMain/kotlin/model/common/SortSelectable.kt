@@ -1,7 +1,6 @@
 package model.common
 
 interface ISortSelectable<T: Enum<T>> {
-    val default: T
     fun select(field: T): Any
 }
 

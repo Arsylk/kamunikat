@@ -1,5 +1,9 @@
 package route
 
+import domain.base.FCScope
+import react.*
+import react.router.RouteProps
+
 interface Route {
     val path: String
     val name: String
@@ -14,5 +18,19 @@ interface Route {
             next = next.parent
         }
         return full
+    }
+
+    fun create(props: RouteProps): ReactNode
+}
+
+fun ChildrenBuilder.Route(
+    route: Route,
+    block: @ReactDsl ChildrenBuilder.() -> Unit = {},
+) {
+    react.router.Route {
+        path = route.path
+        element = route.create(this)
+
+        block()
     }
 }

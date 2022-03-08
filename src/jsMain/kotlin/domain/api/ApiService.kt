@@ -7,9 +7,11 @@ import model.api.PaginatedResponse
 import model.api.SuccessResponse
 import model.api.auth.login.LoginRequest
 import model.api.auth.login.LoginResponse
+import model.api.user.AddUserRequest
 import model.common.Order
 import model.user.User
 import model.user.UserField
+import model.user.UserTag
 
 class ApiService(private val httpClient: HttpClient) {
 
@@ -20,19 +22,25 @@ class ApiService(private val httpClient: HttpClient) {
 
     suspend fun logout() = httpClient.post<SuccessResponse>("/api/auth/logout")
 
+    suspend fun getUsers(page: Int, perPage: Int, order: Order?, orderSelect: UserField?) =
+        httpClient.get<PaginatedResponse<UserField, User>>("/api/users") {
+            parameter("page", page)
+            parameter("per_page", perPage)
+            parameter("order", order)
+            parameter("order_select", orderSelect)
+        }
 
-    suspend fun getAuthors() = httpClient.get<List<Author>>("/api/authors")
+    suspend fun addUser(request: AddUserRequest) =
+        httpClient.post<SuccessResponse>("/api/user") {
+            body = request
+        }
 
-    suspend fun getAuthor(id: Int) = httpClient.get<Author>("/api/author/$id")
 
-    suspend fun putAuthor(author: Author) = httpClient.put<SuccessResponse>("/api/author") {
-        body = author
-    }
+    suspend fun getUserTags() =
+        httpClient.get<List<UserTag>>("/api/user-tags")
 
-    suspend fun getUsers(page: Int, perPage: Int, order: Order?, orderSelect: UserField?) = httpClient.get<PaginatedResponse<UserField, User>> {
-        parameter("page", page)
-        parameter("per_page", perPage)
-        parameter("order", "asc")
-        parameter("order_select", orderSelect)
-    }
+    suspend fun addUserTag(tag: UserTag) =
+        httpClient.post<SuccessResponse>("/api/user-tag") {
+            body = tag
+        }
 }

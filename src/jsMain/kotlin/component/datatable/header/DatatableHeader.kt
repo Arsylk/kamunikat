@@ -1,46 +1,45 @@
 package component.datatable.header
 
-import component.datatable.DatatableSortOrder
 import domain.onClickEvent
 import model.common.Order
 import model.common.cycle
 import mui.material.*
 import react.FC
 import react.Props
+import react.PropsWithChildren
 
 
-external interface DatatableHeaderProps : Props {
-    var columns: List<DatatableHeaderColumn>
-    var sortOrder: DatatableSortOrder?
-    var onSortOrderChange: ((DatatableSortOrder?) -> Unit)?
+external interface DatatableHeaderProps<Field : Enum<Field>> : PropsWithChildren {
+    var order: Order?
+    var orderSelect: Field?
+    var onOrderChange: ((Order?, Field?) -> Unit)?
 }
-val DatatableHeader = FC<DatatableHeaderProps> { props ->
-    TableHead {
-        TableRow {
-            props.columns.forEach { column ->
-                val currentSort = props.sortOrder.takeIf { it?.key == column.key }
-                TableCell {
-                    colSpan = column.colSpan
-                    align = column.align
-                    TableSortLabel {
-                        active = false
-                        active = currentSort != null
-                        direction = when (currentSort?.order) {
-                            Order.Descending -> TableSortLabelDirection.desc
-                            else -> TableSortLabelDirection.asc
-                        }
-                        +column.text
 
-                        onClickEvent {
-                            if (column.sortable) {
-                                val newOrder = currentSort?.order.cycle()
-                                    ?.let { DatatableSortOrder(column.key, it) }
-                                props.onSortOrderChange?.invoke(newOrder)
-                            }
-                        }
-                    }
-                }
+external interface DatatableHeaderCellProps : Props {
+    var text: String
+    var sortable: Boolean?
+    var order: Order?
+    var active: Boolean?
+    var onClickEvent: (() -> Unit)?
+
+    var colSpan: Int?
+    var align: TableCellAlign?
+}
+val DatatableHeaderCell = FC<DatatableHeaderCellProps> { props ->
+    TableCell {
+        colSpan = props.colSpan
+        align = props.align
+
+        if (props.sortable == true) TableSortLabel {
+            active = props.active == true
+            direction = when (props.order) {
+                Order.Descending -> TableSortLabelDirection.desc
+                else -> TableSortLabelDirection.asc
             }
+            +props.text
         }
+        else +props.text
+
+        onClickEvent { props.onClickEvent?.invoke() }
     }
 }

@@ -1,3 +1,4 @@
+@file:JvmName("ExtensionsJvmKt")
 package domain
 
 import io.ktor.application.*
@@ -11,8 +12,8 @@ inline fun <reified T: Enum<T>> ApplicationCall.receivePaginatedRequest(): Pagin
     val json by inject<Json>()
     val params = request.queryParameters
     return PaginatedRequest(
-        page = params["page"]?.toIntOrNull() ?: 0,
-        perPage = params["per_page"]?.toIntOrNull() ?: PaginatedRequest.DEFAULT_PER_PAGE,
+        page = params["page"]?.toIntOrNull() ?: PaginatedRequest.DefaultPage,
+        perPage = params["per_page"]?.toIntOrNull() ?: PaginatedRequest.DefaultPerPage,
         order = params["order"]?.runCatching { json.decodeFromString<Order>(this) }?.getOrNull(),
         orderSelect = params["order_select"]?.runCatching { json.decodeFromString<T>(this) }?.getOrNull(),
     )

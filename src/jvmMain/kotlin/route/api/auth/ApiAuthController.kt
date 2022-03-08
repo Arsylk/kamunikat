@@ -3,13 +3,11 @@ package route.api.auth
 import domain.auth.AuthService
 import domain.db.Users
 import io.ktor.application.*
-import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
-import kotlinx.serialization.SerialName
 import model.api.SuccessResponse
 import model.api.auth.login.LoginRequest
 import model.api.auth.login.LoginResponse
@@ -38,7 +36,7 @@ fun Route.apiAuthController() {
             call.respond(
                 LoginResponse(
                     token = service.tokenForUser(user),
-                    user = user.toCommonUser(),
+                    user = user.toCommon(),
                 )
             )
         }

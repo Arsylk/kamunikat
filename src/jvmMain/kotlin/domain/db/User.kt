@@ -2,6 +2,7 @@ package domain.db
 
 import model.common.DbSortSelectable
 import model.user.UserField
+import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
 import org.ktorm.schema.*
 import java.time.Instant
@@ -14,7 +15,6 @@ object Users : Table<User>("user"), DbSortSelectable<UserField> {
     val username = varchar("username").bindTo { it.username }
     val createdAt = timestamp("created_at").bindTo { it.createdAt }
 
-    override val default = UserField.Id
     override fun select(field: UserField): Column<*> = when (field) {
         UserField.Id -> id
         UserField.Email -> email
@@ -24,14 +24,18 @@ object Users : Table<User>("user"), DbSortSelectable<UserField> {
 
 interface User : Entity<User> {
     val id: Int
-    val email: String
-    val password: String
-    val username: String
+    var email: String
+    var password: String
+    var username: String
     val createdAt: Instant
+    val tags get() = UserTagXrefs.getList { it.userId eq id }.map { it.tag }
 
-    fun toCommonUser(): CommonUser = CommonUser(
+    fun toCommon(): CommonUser = CommonUser(
         id = id,
         email = email,
         username = username,
+        tags = tags.map { it.toCommon() },
     )
+
+    companion object : Entity.Factory<User>()
 }

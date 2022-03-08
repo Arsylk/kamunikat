@@ -4,9 +4,7 @@ import kotlinx.serialization.SerialName
 
 @kotlinx.serialization.Serializable
 enum class Order {
-    @SerialName("asc")
     Ascending,
-    @SerialName("desc")
     Descending,
 }
 

@@ -1,21 +1,18 @@
-import domain.auth.UserContext
 import domain.auth.provideUser
-import domain.isLoggedIn
-import mui.material.Button
-import react.*
+import react.FC
+import react.Props
+import react.create
 import react.dom.html.ReactHTML.h1
 import react.router.Route
 import react.router.Routes
 import react.router.dom.BrowserRouter
 import route.Route
-import route.admin.AdminPage
 import route.admin.AdminPageRoute
-import route.admin.authors.AdminAuthorsPage
-import route.admin.authors.AdminAuthorsPageRoute
+import route.admin.users.AdminUserAddPageRoute
+import route.admin.users.AdminUsersPageRoute
 import route.base.BasePage
 import route.base.home.HomePage
 import route.base.home.HomePageRoute
-import route.base.login.LoginPage
 import route.base.login.LoginPageRoute
 
 
@@ -32,24 +29,16 @@ val App = FC<Props> {
                         element = HomePage.create()
                     }
 
-                    Route {
-                        path = LoginPageRoute.path
-                        element = LoginPage.create()
-                    }
+                    Route(LoginPageRoute)
 
                     Route {
                         path = "*"
                         element = FC<Props> { h1 { +"Page not found" } }.create()
                     }
                 }
-                Route {
-                    path = AdminPageRoute.path
-                    element = AdminPage.create()
-
-                    Route {
-                        path = AdminAuthorsPageRoute.path
-                        element = AdminAuthorsPage.create()
-                    }
+                Route(AdminPageRoute) {
+                    Route(AdminUsersPageRoute)
+                    Route(AdminUserAddPageRoute)
                 }
             }
         }
@@ -193,12 +182,3 @@ val App = FC<Props> {
 //                }
 //            }
 //        }
-
-fun x() {
-    val context = createContext(12)
-    val x = useContext(context)
-
-    context.Provider.create {
-        value = 1
-    }
-}

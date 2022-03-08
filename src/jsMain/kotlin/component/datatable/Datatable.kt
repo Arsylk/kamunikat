@@ -2,38 +2,49 @@ package component.datatable
 
 import component.datatable.body.DatatableBody
 import component.datatable.body.DatatableBodyProps
-import component.datatable.cell.DatatableCell
 import component.datatable.footer.DatatableFooter
-import component.datatable.header.DatatableHeader
-import component.datatable.header.DatatableHeaderColumn
+import component.datatable.header.DatatableHeaderProps
+import component.datatable.row.DatatableRowProps
 import component.datatable.toolbar.DatatableToolbar
-import csstype.pct
+import csstype.*
+import domain.base.FCScope
+import domain.base.collectAsState
+import domain.base.useScope
+import domain.datatable.DatatableSource
 import kotlinx.js.jso
-import model.datatable.DatatableList
-import mui.material.Paper
+import model.common.Order
+import model.common.SortSelectable
+import mui.material.*
 import mui.material.Size
-import mui.material.Table
-import mui.material.TableContainer
 import react.FC
 import react.Props
+import react.dom.html.ReactHTML
 
-external interface  DatatableProps<T: DatatableItem> : Props {
+external interface DatatableProps<Field: Enum<Field>, Item: Any> : Props {
     var isLoading: Boolean?
-    var list: DatatableList<*, *>
+    var isError: Boolean?
+    var throwable: Throwable?
+
+    var page: Int
+    var perPage: Int
+    var order: Order?
+    var orderSelect: Field?
+    var fullSize: Int?
+    var items: List<Item>
 
     var title: String?
-
-    var headerColumns: List<DatatableHeaderColumn>
-    var sortOrder: DatatableSortOrder?
-
-    var rowCells: List<DatatableCell<T>>
+    var keySelector: (Item) -> Any
 
     var onAdd: (() -> Unit)?
-    var onSortOrderChange: ((DatatableSortOrder?) -> Unit)?
     var onPageChange: ((Int) -> Unit)?
-    var onCellClick: ((DatatableRowKey, DatatableCellKey) -> Unit)?
+    var onOrderChange: ((Order?, Field?) -> Unit)?
+
+    var RenderHeader: FC<DatatableHeaderProps<Field>>
+    var RenderRow: FC<DatatableRowProps<Item>>
 }
-val Datatable = FC<DatatableProps<*>> { props ->
+val Datatable = FC<DatatableProps<*, *>> { _props ->
+    @Suppress("UPPER_BOUND_VIOLATED")
+    val props = _props.unsafeCast<DatatableProps<Enum<*>, Any>>()
     Paper {
         sx = jso {
             width = 100.pct
@@ -44,34 +55,95 @@ val Datatable = FC<DatatableProps<*>> { props ->
             onAdd = props.onAdd
         }
 
-        TableContainer {
-            Table {
+        Box {
+            sx = jso {
+                position = Position.relative
+            }
+            TableContainer {
+                Table {
+                    sx = jso {
+                        size = Size.medium
+                    }
+
+                    TableHead {
+                        TableRow {
+                            props.RenderHeader {
+                                order = props.order
+                                orderSelect = props.orderSelect
+                                onOrderChange = props.onOrderChange
+                            }
+                        }
+                    }
+
+                    @Suppress("UPPER_BOUND_VIOLATED")
+                    DatatableBody<DatatableBodyProps<Any>> {
+                        isLoading = props.isLoading == true
+                        items = props.items
+                        rowsPerPage = props.perPage
+                        keySelector = props.keySelector
+
+                        RenderRow = props.RenderRow
+                    }
+                }
+            }
+
+
+            Backdrop {
                 sx = jso {
-                    size = Size.medium
+                    position = Position.absolute
                 }
-
-                DatatableHeader {
-                    columns = props.headerColumns
-                    sortOrder = props.sortOrder
-                    onSortOrderChange = props.onSortOrderChange
+                open = props.isLoading == true || props.isError == true
+                if (props.isLoading == true) CircularProgress {
+                    variant = CircularProgressVariant.indeterminate
                 }
-
-                @Suppress("UPPER_BOUND_VIOLATED")
-                DatatableBody<DatatableBodyProps<DatatableItem>> {
-                    isLoading = props.isLoading == true
-                    items = props.list.items.asDynamic()
-                    rowsPerPage = props.list.perPage
-                    rowCells = props.rowCells.asDynamic() as List<DatatableCell<DatatableItem>>
-                    onCellClick = props.onCellClick
+                if (props.isError == true) Stack {
+                    Typography {
+                        component = ReactHTML.h1
+                        variant = "h5"
+                        +"Error"
+                    }
+                    props.throwable?.let {
+                        Typography {
+                            component = ReactHTML.h1
+                            variant = "p"
+                            +it.stackTraceToString()
+                        }
+                    }
                 }
             }
         }
 
         DatatableFooter {
-            page = props.list.page
-            rowsPerPage = props.list.perPage
-            fullSize = props.list.orderSelect.asDynamic()
+            page = props.page
+            rowsPerPage = props.perPage
+            fullSize = props.fullSize
             onPageChange = props.onPageChange
         }
+    }
+}
+
+
+@FCScope
+fun <Field: Enum<Field>, Item: SortSelectable<Field>> DatatableProps<Field, Item>.bindSource(
+    source: DatatableSource<Field, Item>,
+) {
+    val dsState = source.state.collectAsState(source.initialState)
+    val operation = source.operation.collectAsState()
+
+    isLoading = operation is DatatableSource.Operation.Loading
+    isError = operation is DatatableSource.Operation.Error
+
+    page = dsState.page
+    perPage = dsState.perPage
+    order = dsState.order
+    orderSelect = dsState.orderSelect
+    fullSize = dsState.fullSize
+    items = dsState.items
+
+    onPageChange = { page ->
+        source.setPage(page)
+    }
+    onOrderChange = { order, field ->
+        source.setFullOrder(order, field)
     }
 }

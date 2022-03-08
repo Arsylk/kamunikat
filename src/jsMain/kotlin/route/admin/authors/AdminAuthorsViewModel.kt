@@ -30,9 +30,6 @@ class AdminAuthorsViewModel(
     }
 
     fun loadAuthors() {
-        errorAware(key = "authors", Dispatchers.Default) {
-            _authors.value = apiService.getAuthors()
-        }
     }
 
     enum class Column {

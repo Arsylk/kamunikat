@@ -1,7 +1,7 @@
 package route.api
 
 import domain.auth.AuthService
-import domain.db.Users
+import domain.db.*
 import domain.receivePaginatedRequest
 import io.ktor.application.*
 import io.ktor.auth.*
@@ -11,56 +11,28 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.routing.get
-import model.Author
 import model.api.PaginatedResponse
+import model.api.SuccessResponse
+import model.api.user.AddUserRequest
 import model.common.sortedBy
 import model.user.UserField
 import org.koin.ktor.ext.inject
 import org.ktorm.database.Database
+import org.ktorm.dsl.eq
 import org.ktorm.entity.*
 import route.api.auth.apiAuthController
-
-private val authors = mutableListOf(
-    Author(1, "name a", "text 23"),
-    Author(2, "name b", "super longer text"),
-    Author(3, "name c", "no content"),
-)
+import model.user.UserTag as CommonUserTag
 
 fun Routing.apiController() {
     route("/api") {
         apiAuthController()
 
-        getAuthors()
-        getAuthor()
-        putAuthor()
-
-        curdUsers()
+        crudUsers()
+        crudUserTags()
     }
 }
 
-private fun Route.getAuthors() {
-    get("/authors") {
-        call.respond(authors)
-    }
-}
-
-private fun Route.getAuthor() {
-    @Location("/author/{id}") data class AuthorParams(val id: Int)
-    get<AuthorParams> { params ->
-        call.respond(authors.first { it.id == params.id })
-    }
-}
-
-private fun Route.putAuthor() {
-    put("/author") {
-        val author = call.receive<Author>()
-        authors += author
-        call.respond(HttpStatusCode.Accepted)
-    }
-}
-
-
-private fun Route.curdUsers() {
+private fun Route.crudUsers() {
     val db by inject<Database>()
     authenticate(AuthService.JwtAuthName) {
         get("/users") {
@@ -70,7 +42,7 @@ private fun Route.curdUsers() {
                 .sortedBy(params.orderSelect, params.order)
                 .drop(params.page * params.perPage)
                 .take(params.perPage)
-                .map { it.toCommonUser() }
+                .map { it.toCommon() }
             val size = db.sequenceOf(Users).count()
 
             call.respond(
@@ -80,9 +52,48 @@ private fun Route.curdUsers() {
                     order = params.order,
                     orderSelect = params.orderSelect,
                     fullSize = size,
-                    list = list,
+                    items = list,
                 )
             )
+        }
+        post("/user") {
+            val req = call.receive<AddUserRequest>()
+            val newId = db.sequenceOf(Users).add(
+                User {
+                    username = req.username
+                    email = req.email
+                    password = req.password
+                }
+            )
+            val newUser = db.sequenceOf(Users).find { it.id eq newId }!!
+            req.tagIds.map { tagId ->
+                UserTagXref {
+                    tag = db.sequenceOf(UserTags).find { it.id eq tagId }!!
+                    user = newUser
+                }
+            }.forEach { xRef ->
+                db.sequenceOf(UserTagXrefs).add(xRef)
+            }
+            call.respond(SuccessResponse())
+        }
+    }
+}
+
+private fun Route.crudUserTags() {
+    val db by inject<Database>()
+    authenticate(AuthService.JwtAuthName) {
+        get("/user-tags") {
+            val list = db.sequenceOf(UserTags).map { it.toCommon() }
+            call.respond(list)
+        }
+        post("/user-tag") {
+            val tag = call.receive<CommonUserTag>()
+            db.sequenceOf(UserTags).add(
+                UserTag {
+                    name = tag.name
+                }
+            )
+            call.respond(SuccessResponse())
         }
     }
 }

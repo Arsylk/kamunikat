@@ -14,6 +14,7 @@ import react.*
 import react.dom.html.ButtonType
 import react.dom.html.InputType
 import react.dom.html.ReactHTML
+import react.router.RouteProps
 import react.router.useNavigate
 import route.Route
 import route.base.home.HomePageRoute
@@ -23,6 +24,8 @@ object LoginPageRoute : Route {
     override val path = "login"
     override val name = "Login"
     override val parent = HomePageRoute
+
+    override fun create(props: RouteProps) = LoginPage.create()
 }
 
 val LoginPage = FC<Props> {

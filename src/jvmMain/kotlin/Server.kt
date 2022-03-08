@@ -11,6 +11,7 @@ import io.ktor.auth.*
 import io.ktor.http.*
 import io.ktor.locations.*
 import io.ktor.sessions.*
+import model.api.PaginatedRequest
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.ktor.ext.Koin
@@ -54,21 +55,6 @@ fun Application.main(testing: Boolean = false) {
             static("js") {
                 resource("kamunikat.js")
                 resource("kamunikat.js.map")
-            }
-        }
-
-        route("test") {
-            get { x->
-                val ds = this@route.get<DataSource>(named("primary"))
-                log.info("ds: $ds")
-                log.info("conn: ${ds.connection}")
-
-                val db = this@route.get<Database>()
-                log.info("db: $db")
-                call.respondText("GET TEST !")
-            }
-            post {
-                call.respondText("POST TEST !@")
             }
         }
 

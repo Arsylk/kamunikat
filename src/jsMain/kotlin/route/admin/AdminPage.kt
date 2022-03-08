@@ -13,15 +13,17 @@ import react.*
 import react.dom.DOMAttributes
 import react.dom.html.ReactHTML
 import react.router.Outlet
+import react.router.RouteProps
 import react.router.useNavigate
 import route.Route
-import route.admin.authors.AdminAuthorsPageRoute
 import route.admin.users.AdminUsersPageRoute
 import mui.icons.material.Menu as MenuIcon
 
 object AdminPageRoute : Route {
     override val path = "/admin"
     override val name = "Admin"
+
+    override fun create(props: RouteProps) = AdminPage.create()
 }
 
 val AdminPage = FC<Props> {
@@ -114,7 +116,7 @@ private val DrawerContent = FC<Props> {
             ListItemButton {
                 ListItemText {
                     primary = ReactNode("Authors")
-                    unsafeOnClickEvent { navigate(AdminAuthorsPageRoute.absolutePath) }
+//                    unsafeOnClickEvent { navigate(AdminAuthorsPageRoute.absolutePath) }
                 }
             }
 

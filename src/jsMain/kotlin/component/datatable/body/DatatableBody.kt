@@ -1,49 +1,52 @@
 package component.datatable.body
 
-import component.datatable.DatatableCellKey
-import component.datatable.DatatableItem
 import component.datatable.DatatableRowKey
-import component.datatable.cell.DatatableCell
-import mui.material.Autocomplete
-import mui.material.TableBody
-import mui.material.TableCell
-import mui.material.TableRow
+import component.datatable.row.DatatableRowProps
+import csstype.*
+import kotlinx.js.jso
+import mui.material.*
+import mui.material.styles.Theme
+import mui.material.styles.useTheme
 import react.FC
 import react.Props
+import react.dom.html.ReactHTML
 import react.key
 
-external interface DatatableBodyProps<T: DatatableItem> : Props {
+external interface DatatableBodyProps<T : Any> : Props {
+    var isLoading: Boolean?
     var items: List<T>
     var rowsPerPage: Int
-    var isLoading: Boolean?
+    var keySelector: (T) -> Any
 
-    var rowCells: List<DatatableCell<T>>
-    var onCellClick: ((DatatableRowKey, DatatableCellKey) -> Unit)?
+    var RenderRow: FC<DatatableRowProps<T>>
 }
-val DatatableBody = FC<DatatableBodyProps<*>> { props ->
+
+val DatatableBody = FC<DatatableBodyProps<*>> { _props ->
+    val props = _props.unsafeCast<DatatableBodyProps<Any>>()
     val emptyRows = props.rowsPerPage - props.items.size
+
     TableBody {
         props.items.forEachIndexed { i, item ->
-            val rowKey = DatatableRowKey(item.key)
+            val rowKey = DatatableRowKey(props.keySelector(item))
             TableRow {
                 key = rowKey.toString()
                 hover = true
 
-                props.rowCells.forEach { rawRowCell ->
-                    val rowCell = rawRowCell.asDynamic() as DatatableCell<DatatableItem>
-                    rowCell.fc {
-                        this.item = item
-                        currentPosition = i
-                        onCellClick = {
-                            props.onCellClick?.invoke(rowKey, rowCell.key)
-                        }
-                    }
+                props.RenderRow {
+                    this.item = item
+                    position = i
                 }
             }
         }
 
-        for(i in 0 until emptyRows) {
-            TableRow {}
+        for (i in 0 until emptyRows) {
+            TableRow {
+                TableCell {
+                    component = ReactHTML.th
+                    scope = "row"
+                    colSpan = 9999
+                }
+            }
         }
     }
 }

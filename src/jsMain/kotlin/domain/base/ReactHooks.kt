@@ -6,10 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.context.GlobalContext
 import org.koin.mp.KoinPlatformTools
-import react.StateInstance
-import react.StateSetter
-import react.useEffectOnce
-import react.useState
+import react.*
 
 
 @Target(AnnotationTarget.FUNCTION)
@@ -19,7 +16,7 @@ annotation class FCScope
 annotation class NonFCScope
 
 @FCScope
-fun useScope(): CoroutineScope {
+fun useScope(tag: String? = null): CoroutineScope {
     val scope by useState {
         val scope = MainScope()
         console.log("coroutine scope created: ${scope.hashCode()} !")
@@ -37,12 +34,13 @@ fun useScope(): CoroutineScope {
 @FCScope
 fun <T> produceState(
     initialValue: T,
+    key: Any? = null,
     block: @NonFCScope suspend StateSetter<T>.() -> Unit
 ): T {
     val state = useState(initialValue)
     val scope by useState { MainScope() }
 
-    useEffectOnce {
+    useEffect(key ?: emptyArray<dynamic>()) {
         scope.launch {
             block.invoke(state.component2())
         }

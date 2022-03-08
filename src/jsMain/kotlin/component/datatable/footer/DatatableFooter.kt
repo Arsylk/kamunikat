@@ -8,7 +8,7 @@ import react.dom.html.ReactHTML
 external interface DatatableFooterProps : Props {
     var page: Int
     var rowsPerPage: Int
-    var fullSize: Int
+    var fullSize: Int?
     var onPageChange: ((Int) -> Unit)?
 }
 val DatatableFooter = FC<DatatableFooterProps> { props ->
@@ -17,7 +17,7 @@ val DatatableFooter = FC<DatatableFooterProps> { props ->
 
         page = props.page
         rowsPerPage = props.rowsPerPage
-        count = props.fullSize
+        count = props.fullSize ?: -1
         rowsPerPageOptions = arrayOf(props.rowsPerPage)
 
         onPageChange = { _, page ->

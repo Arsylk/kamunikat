@@ -8,5 +8,5 @@ import route.admin.authors.Effect
 class AdminUsersViewModel(
     private val apiService: ApiService,
 ) : EffectViewModel<Effect>() {
-    val source = DatatableSource(25, apiService::getUsers)
+    val source = DatatableSource(fetch = apiService::getUsers)
 }
