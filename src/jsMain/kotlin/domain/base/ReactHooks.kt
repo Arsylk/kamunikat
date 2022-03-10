@@ -20,7 +20,7 @@ fun useScope(tag: String? = null): CoroutineScope {
     val scope by useState {
         val scope = MainScope()
         console.log("coroutine scope created: ${scope.hashCode()} !")
-        scope
+        if (tag != null) scope + CoroutineName(tag) else scope
     }
     useEffectOnce {
         cleanup {
@@ -30,6 +30,7 @@ fun useScope(tag: String? = null): CoroutineScope {
     }
     return scope
 }
+
 
 @FCScope
 fun <T> produceState(

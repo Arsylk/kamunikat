@@ -16,7 +16,10 @@ import react.*
 import react.dom.html.ReactHTML
 import react.router.Outlet
 import react.router.useNavigate
+import route.Route
+import route.base.home.HomePage
 import mui.icons.material.Menu as MenuIcon
+
 
 val BasePage = FC<Props> {
     val navigate = useNavigate()

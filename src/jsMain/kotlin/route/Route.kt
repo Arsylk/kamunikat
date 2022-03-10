@@ -30,7 +30,6 @@ fun ChildrenBuilder.Route(
     react.router.Route {
         path = route.path
         element = route.create(this)
-
-        block()
+        block(this)
     }
 }
