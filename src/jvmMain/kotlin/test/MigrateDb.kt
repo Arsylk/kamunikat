@@ -12,6 +12,14 @@ import org.ktorm.support.mysql.MySqlDialect
 fun main(args: Array<String>) {
     KoinApplication.init()
     val db = Database.connect(
+        url = "jdbc:mysql://db:3306/database",
+        driver = "com.mysql.cj.jdbc.Driver",
+        user = "root",
+        password = "root",
+        dialect = MySqlDialect(),
+    )
+
+    val legacy = Database.connect(
         url = "jdbc:mysql://db:3306/legacy",
         driver = "com.mysql.cj.jdbc.Driver",
         user = "root",
@@ -19,48 +27,13 @@ fun main(args: Array<String>) {
         dialect = MySqlDialect(),
     )
 
-    val pages = db.useConnection { conn ->
-        val q = conn.prepareStatement(AUTHOR_PAGES_QUERY).executeQuery()
-        q.asIterable().map {
-            it.getString("longtitle").split("#")
-                .map { it.trim() }
-        }
-    }
+    MigratePublications.execute(db, legacy)
 }
 
-private val AUTHOR_PAGES_QUERY = """
-    SELECT 
-    	site.id, 
-        site.published,
-        site.pagetitle, 
-        site.longtitle, 
-        site.content,
-        COALESCE(cv_alive.value, 0) as is_alive,
-        COALESCE(cv_rawdate.value, '') as raw_date,
-        COALESCE(cv_bactive.value, 0) as is_birthday_active,
-        cv_gender.value as gender,
-        IF(
-    		replace(cv_email.value, 'email@autora', '') = '',
-            NULL,
-            replace(cv_email.value, 'email@autora', '')
-    	) as emailmodx_site_content
-    FROM 
-    	modx_site_content as site
-    LEFT JOIN modx_document_groups ON 
-    	modx_document_groups.document = site.id 
-    LEFT JOIN modx_site_tmplvar_contentvalues as cv_alive ON 
-    	cv_alive.contentid = site.id AND cv_alive.tmplvarid = 30
-    LEFT JOIN modx_site_tmplvar_contentvalues as cv_rawdate ON 
-    	cv_rawdate.contentid = site.id AND cv_rawdate.tmplvarid = 36
-    LEFT JOIN modx_site_tmplvar_contentvalues as cv_bactive ON 
-    	cv_bactive.contentid = site.id AND cv_bactive.tmplvarid = 37
-    LEFT JOIN modx_site_tmplvar_contentvalues as cv_gender ON 
-    	cv_gender.contentid = site.id AND cv_gender.tmplvarid = 38
-    LEFT JOIN modx_site_tmplvar_contentvalues as cv_email ON 
-    	cv_email.contentid = site.id AND cv_email.tmplvarid = 40
-    WHERE site.parent = 166
-    ORDER BY site.id
-""".trimIndent()
+interface IMigrate {
+    fun execute(db: Database, legacy: Database)
+}
+
 
 private val PUB_ATTACHMENTS_QUERY = """
     WITH dataset AS (

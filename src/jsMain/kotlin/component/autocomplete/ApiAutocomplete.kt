@@ -68,8 +68,8 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<*>> { rawProps ->
             multiple = true
             clearOnBlur = true
             value = selectedValues.toTypedArray()
-//            loading = isLoading
-//            loadingText = ReactNode("231")
+            loading = isLoading
+            loadingText = ReactNode("231")
 
 //            open = isOpen
 //            onOpen = { isOpen = true }
@@ -79,9 +79,7 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<*>> { rawProps ->
                 props.comparator?.invoke(option, value) ?: (option == value)
             }
             filterOptions = { list, filter ->
-                val r = list.filter { props.filter(it, filter.inputValue) }.toTypedArray()
-                console.log(r)
-                r
+                list.filter { props.filter(it, filter.inputValue) }.toTypedArray()
             }
             getOptionLabel = { item -> represent(item) }
             renderInput = { params ->
