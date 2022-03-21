@@ -3,3 +3,4 @@
 /build/
 /build/classes/kotlin/jvm/main/
 /.sessions/
+/.idea/vcs.xml
