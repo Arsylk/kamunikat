@@ -129,6 +129,7 @@ fun <Field: Enum<Field>, Item: SortSelectable<Field>> DatatableProps<Field, Item
 ) {
     val dsState = source.state.collectAsState(source.initialState)
     val operation = source.operation.collectAsState()
+    console.log(operation)
 
     isLoading = operation is DatatableSource.Operation.Loading
     isError = operation is DatatableSource.Operation.Error

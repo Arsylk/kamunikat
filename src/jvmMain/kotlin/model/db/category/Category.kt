@@ -1,18 +1,16 @@
 package model.db.category
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 
-object Categories : Table<Category>("category") {
-    val id = int("id").primaryKey().bindTo { it.id }
-    val name = varchar("name").bindTo { it.name }
+object Categories : IntIdTable("category") {
+    val name = varchar("name", length = 63).uniqueIndex()
 }
 
-interface Category : Entity<Category> {
-    var id: Int
-    var name: String
+class Category(id: EntityID<Int>) : IntEntity(id) {
+    var name by Categories.name
 
-    companion object : Entity.Factory<Category>()
+    companion object : IntEntityClass<Category>(Categories)
 }

@@ -3,22 +3,18 @@ package domain.auth
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
-import domain.db.User
-import domain.db.Users
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
 import io.ktor.response.*
 import io.ktor.sessions.*
 import model.auth.UserSession
+import model.db.user.User
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.ktorm.database.Database
-import org.ktorm.dsl.eq
-import org.ktorm.entity.firstOrNull
-import org.ktorm.entity.sequenceOf
 import java.io.File
-import java.util.*
 
 class AuthService(environment: ApplicationEnvironment): KoinComponent {
     private val db by inject<Database>()
@@ -39,7 +35,7 @@ class AuthService(environment: ApplicationEnvironment): KoinComponent {
             .withIssuer(issuer)
             .withAudience(audience)
             /*.withExpiresAt(Date(System.currentTimeMillis() + 60000))*/
-            .withClaim("id", user.id)
+            .withClaim("id", user.id.value)
             .withClaim("username", user.username)
             .withClaim("email", user.email)
             .sign(Algorithm.HMAC256(secret))
@@ -47,7 +43,7 @@ class AuthService(environment: ApplicationEnvironment): KoinComponent {
 
     fun sessionForUser(user: User): UserSession {
         return UserSession(
-            userId = user.id,
+            userId = user.id.value,
         )
     }
 
@@ -60,8 +56,7 @@ class AuthService(environment: ApplicationEnvironment): KoinComponent {
 
         session<UserSession>(SessionAuthName) {
             validate { session ->
-                val user = db.sequenceOf(Users)
-                    .firstOrNull { it.id eq session.userId }
+                val user = transaction(db) { User.findById(session.userId) }
                 session.takeIf { user != null }
             }
             challenge {

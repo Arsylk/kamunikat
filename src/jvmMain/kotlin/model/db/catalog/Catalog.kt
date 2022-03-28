@@ -1,18 +1,21 @@
 package model.db.catalog
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 
-object Catalogs : Table<Catalog>("catalog") {
-    val id = int("id").primaryKey().bindTo { it.id }
-    val name = varchar("name").bindTo { it.name }
+
+object Catalogs : IntIdTable("catalog") {
+    val name = varchar("name", length = 31).uniqueIndex()
+    val letter = char("letter").nullable()
+    val hasInventory = bool("has_inventory").default(false)
 }
 
-interface Catalog : Entity<Catalog> {
-    val id: Int
-    var name: String
+class Catalog(id: EntityID<Int>) : IntEntity(id) {
+    var name by Catalogs.name
+    var letter by Catalogs.letter
+    var hasInventory by Catalogs.hasInventory
 
-    companion object : Entity.Factory<Catalog>()
+    companion object : IntEntityClass<Catalog>(Catalogs)
 }

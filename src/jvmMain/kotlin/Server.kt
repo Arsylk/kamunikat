@@ -16,8 +16,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.get
-import org.koin.ktor.ext.inject
-import org.ktorm.database.Database
 import org.slf4j.event.Level
 import route.admin.adminController
 import route.api.apiController

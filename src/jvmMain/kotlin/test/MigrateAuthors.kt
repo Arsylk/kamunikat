@@ -1,66 +1,60 @@
 package test
 
+import domain.db.rawExec
 import kotlinx.datetime.toKotlinLocalDate
 import model.common.Gender
 import model.common.Language
 import model.db.author.*
-import org.ktorm.database.Database
-import org.ktorm.database.asIterable
-import org.ktorm.entity.*
-import java.sql.SQLIntegrityConstraintViolationException
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.insertIgnore
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
 
 object MigrateAuthors : IMigrate {
     override fun execute(db: Database, legacy: Database) {
-        //first(db, legacy)
-        //second(db, legacy)
+        authorsWithInfo(db, legacy)
+        authorsExtracted(db, legacy)
     }
 
-    private fun first(db: Database, legacy: Database) {
-        val list = legacy.useConnection { conn ->
-            conn.prepareStatement(AUTHOR_PAGES_QUERY).executeQuery()
-                .asIterable().map {
-                    LegacyAuthor(
-                        id = it.getInt("id"),
-                        name = it.getString("name"),
-                        email = it.getString("email"),
-                        rawAlias = it.getString("raw_alias"),
-                        rawContent = it.getString("raw_content"),
-                        rawBirthday = it.getString("raw_date"),
-                        rawGender = it.getString("raw_gender"),
-                        isAlive = it.getBoolean("is_alive"),
-                        isBirthdayActive = it.getBoolean("is_birthday_active"),
-                        isPublished = it.getBoolean("is_published")
-                    )
-                }
+    private fun authorsWithInfo(db: Database, legacy: Database) {
+        val list = legacy.rawExec(AUTHOR_PAGES_QUERY) { it ->
+            LegacyAuthor(
+                id = it.getInt("id"),
+                name = it.getString("name"),
+                email = it.getString("email"),
+                rawAlias = it.getString("raw_alias"),
+                rawContent = it.getString("raw_content"),
+                rawBirthday = it.getString("raw_date"),
+                rawGender = it.getString("raw_gender"),
+                isAlive = it.getBoolean("is_alive"),
+                isBirthdayActive = it.getBoolean("is_birthday_active"),
+                isPublished = it.getBoolean("is_published")
+            )
         }
 
         list.forEach { l ->
-            val author = Author { name = l.name }
-            db.sequenceOf(Authors).add(author)
-
-            l.aliases.forEach {
-                db.sequenceOf(AuthorAliases).add(
-                    AuthorAlias {
+            val author = transaction(db) { Author.new { name = l.name } }
+            l.aliases.map {
+                transaction(db) {
+                    AuthorAlias.new {
                         this.author = author
                         name = it
                     }
-                )
+                }
             }
 
             l.contents.forEach { (lang, text) ->
-                db.sequenceOf(AuthorContents).add(
-                    AuthorContent {
+                transaction(db) {
+                    AuthorContent.new {
                         this.author = author
                         language = lang
                         content = text
                     }
-                )
+                }
             }
-
-            db.sequenceOf(AuthorInfos).add(
-                AuthorInfo {
+            transaction(db) {
+                AuthorInfo.new {
                     this.author = author
                     gender = l.gender
                     birthday = l.birthday
@@ -69,56 +63,36 @@ object MigrateAuthors : IMigrate {
                     isBirthdayActive = l.isBirthdayActive
                     isPublished = l.isPublished
                 }
-            )
+            }
         }
     }
 
-    private fun second(db: Database, legacy: Database) {
-        val current = db.sequenceOf(Authors)
-            .filterColumns { listOf(it.name) }
-            .map { it.name }.toSet() + db.sequenceOf(AuthorAliases)
-            .filterColumns { listOf(it.name) }
-            .map { it.name }.toSet()
-        val raw = legacy.useConnection { conn ->
-            conn.prepareStatement(AUTHOR_RAW_QUERY).executeQuery()
-                .asIterable()
-                .map { it.getString("raw_author").split(",") }
-                .map { it.map { it.trim()} }
+    private fun authorsExtracted(db: Database, legacy: Database) {
+        val current = transaction(db) { Author.all().toList() }
+        val raw = legacy.rawExec(AUTHOR_RAW_QUERY) { row ->
+            row.getString("raw_author").split(",").map(String::trim)
         }.flatten().toSet()
 
-        val new = (raw - current)
-        new.forEach {
-            kotlin.runCatching {
-                db.sequenceOf(Authors).add(
-                    Author {
-                        name = it
-                    }
-                )
-            }.onFailure {
-                if (it is SQLIntegrityConstraintViolationException) {
-                    println("duplicate on: $it")
+        val new = (raw - current.map { it.name }.toSet())
+        transaction(db) {
+            new.forEach { name ->
+                Authors.insertIgnore {
+                    it[this.name] = name
                 }
             }
         }
     }
 
     private fun maxAuthorLen(db: Database): Int {
-        val max1 = db.useConnection { conn ->
-            val q = conn.prepareStatement(AUTHOR_PAGES_QUERY).executeQuery()
-            q.asIterable().map {
-                it.getString("longtitle")
-                    .split("#")
-                    .map { it.trim() }
-            }
+        val max1 = db.rawExec(AUTHOR_PAGES_QUERY) { row ->
+            row.getString("longtitle")
+                .split("#")
+                .map { it.trim() }
         }.flatten().maxByOrNull { it.length }
-        val max2 = db.useConnection { conn ->
-            val q = conn.prepareStatement("SELECT autor FROM amlib_publikacje GROUP BY autor;")
-                .executeQuery()
-            q.asIterable().map {
-                it.getString("autor")
-                    .split(",")
-                    .map { it.trim() }
-            }
+        val max2 = db.rawExec("SELECT autor FROM amlib_publikacje GROUP BY autor;") { row ->
+            row.getString("autor")
+                .split(",")
+                .map { it.trim() }
         }.flatten().maxByOrNull { it.length }
 
         println("$max1, $max2")

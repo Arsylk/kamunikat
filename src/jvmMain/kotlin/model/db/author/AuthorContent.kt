@@ -1,24 +1,25 @@
 package model.db.author
 
 import model.common.Language
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.text
-import org.ktorm.schema.varchar
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
 
-object AuthorContents : Table<AuthorContent>("author_content") {
-    val id = int("id").primaryKey()
-    val authorId = int("author_id").references(Authors) { it.author }
-    val language = varchar("language").transform({ Language.mapFrom(it) }, { it.text }).bindTo { it.language }
-    val content = text("content").bindTo { it.content }
+object AuthorContents : IntIdTable("author_content") {
+    val authorId = reference("author_id", Authors,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE,
+    )
+    val language = enumerationByName("language", 31, Language::class).default(Language.Belarusian)
+    val content = text("content")
 }
 
-interface AuthorContent : Entity<AuthorContent> {
-    val id: Int
-    var author: Author
-    var language: Language
-    var content: String
+class AuthorContent(id: EntityID<Int>) : IntEntity(id) {
+    var author by Author referencedOn AuthorContents.authorId
+    var language by AuthorContents.language
+    var content by AuthorContents.content
 
-    companion object : Entity.Factory<AuthorContent>()
+    companion object : IntEntityClass<AuthorContent>(AuthorContents)
 }

@@ -1,18 +1,17 @@
 package model.db.author
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 
-object Authors : Table<Author>("author") {
-    val id = int("id").primaryKey().bindTo { it.id }
-    val name = varchar("name").bindTo { it.name }
+object Authors : IntIdTable("author") {
+    val name = varchar("name", length = 127).uniqueIndex()
 }
 
-interface Author : Entity<Author> {
-    val id: Int
-    var name: String
+class Author(id: EntityID<Int>) : IntEntity(id) {
+    var name by Authors.name
+    val aliases by AuthorAlias referrersOn AuthorAliases.authorId
 
-    companion object : Entity.Factory<Author>()
+    companion object : IntEntityClass<Author>(Authors)
 }

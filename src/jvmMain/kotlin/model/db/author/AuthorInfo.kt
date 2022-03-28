@@ -1,29 +1,36 @@
 package model.db.author
 
-import domain.db.kDate
-import kotlinx.datetime.LocalDate
 import model.common.Gender
-import org.ktorm.entity.Entity
-import org.ktorm.schema.*
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.kotlin.datetime.date
 
-object AuthorInfos : Table<AuthorInfo>("author_info") {
-    val authorId = int("author_id").primaryKey().references(Authors) { it.author }
-    val gender = varchar("gender").transform({ Gender.mapFrom(it) }, { it.text }).bindTo { it.gender }
-    val birthday = kDate("birthday").bindTo { it.birthday }
-    val email = varchar("email").bindTo { it.email }
-    val isAlive = boolean("is_alive").bindTo { it.isAlive }
-    val isBirthdayActive = boolean("is_birthday_active").bindTo { it.isBirthdayActive }
-    val isPublished = boolean("is_published").bindTo { it.isPublished }
+
+object AuthorInfos : IntIdTable("author_info") {
+    val authorId = reference("author_id", Authors,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE,
+    )
+    val gender = enumerationByName("gender", 31, Gender::class).default(Gender.Unknown)
+    val birthday = date("birthday").nullable()
+    val email = varchar("email", length = 63).nullable()
+    val isAlive = bool("is_alive")
+    val isBirthdayActive = bool("is_birthday_active")
+    val isPublished = bool("is_published")
 }
 
-interface AuthorInfo : Entity<AuthorInfo> {
-    var author: Author
-    var gender: Gender
-    var birthday: LocalDate?
-    var email: String?
-    var isAlive: Boolean
-    var isBirthdayActive: Boolean
-    var isPublished: Boolean
+class AuthorInfo(id: EntityID<Int>) : IntEntity(id) {
+    var author by Author referencedOn AuthorInfos.authorId
+    var gender by AuthorInfos.gender
+    var birthday by AuthorInfos.birthday
+    var email by AuthorInfos.email
+    var isAlive by AuthorInfos.isAlive
+    var isBirthdayActive by AuthorInfos.isBirthdayActive
+    var isPublished by AuthorInfos.isPublished
+    val contents by AuthorContent referrersOn AuthorContents.authorId
 
-    companion object : Entity.Factory<AuthorInfo>()
+    companion object : IntEntityClass<AuthorInfo>(AuthorInfos)
 }

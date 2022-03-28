@@ -1,18 +1,20 @@
 package model.db.periodical
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 
-object Periodicals : Table<Periodical>("periodical") {
-    val id = int("id").primaryKey().bindTo { it.id }
-    val name = varchar("name").bindTo { it.name }
+object Periodicals : IntIdTable("periodical") {
+    val title = varchar("title", length = 255)
+    val content = text("content").nullable()
+    val isPublished = bool("is_published").default(false)
 }
 
-interface Periodical : Entity<Periodical> {
-    val id: Int
-    var name: String
+class Periodical(id: EntityID<Int>) : IntEntity(id) {
+    var title by Periodicals.title
+    var content by Periodicals.content
+    var isPublished by Periodicals.isPublished
 
-    companion object : Entity.Factory<Periodical>()
+    companion object : IntEntityClass<Periodical>(Periodicals)
 }

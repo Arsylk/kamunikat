@@ -1,7 +1,6 @@
 package route.api.auth
 
 import domain.auth.AuthService
-import domain.db.Users
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -12,13 +11,13 @@ import model.api.SuccessResponse
 import model.api.auth.login.LoginRequest
 import model.api.auth.login.LoginResponse
 import model.auth.UserSession
+import model.db.user.User
+import model.db.user.Users
+import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
-import org.ktorm.database.Database
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.entity.firstOrNull
-import org.ktorm.entity.sequenceOf
-
 
 fun Route.apiAuthController() {
     val db by inject<Database>()
@@ -28,8 +27,12 @@ fun Route.apiAuthController() {
         post("/login") {
             val request = call.receive<LoginRequest>()
 
-            val user = db.sequenceOf(Users).firstOrNull {
-                (it.email eq request.email) and (it.password eq request.password)
+            val user = transaction(db) {
+                val user = User.find {
+                    (Users.email eq request.email) and
+                    (Users.password eq request.password)
+                }.with(User::tags).singleOrNull()
+                user
             } ?: return@post call.respond(HttpStatusCode.Unauthorized)
 
             call.sessions.set(service.sessionForUser(user))

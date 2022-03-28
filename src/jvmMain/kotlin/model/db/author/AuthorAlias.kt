@@ -1,20 +1,22 @@
 package model.db.author
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
 
-object AuthorAliases : Table<AuthorAlias>("author_alias") {
-    val id = int("id").primaryKey().bindTo { it.id }
-    val authorId = int("author_id").primaryKey().references(Authors) { it.author }
-    val name = varchar("name").bindTo { it.name }
+object AuthorAliases : IntIdTable("author_alias") {
+    val authorId = reference("author_id", Authors,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE,
+    )
+    val name = varchar("name", length = 127)
 }
 
-interface AuthorAlias : Entity<AuthorAlias> {
-    val id: Int
-    var author: Author
-    var name: String
+class AuthorAlias(id: EntityID<Int>) : IntEntity(id) {
+    var author by Author referencedOn AuthorAliases.authorId
+    var name by AuthorAliases.name
 
-    companion object : Entity.Factory<AuthorAlias>()
+    companion object : IntEntityClass<AuthorAlias>(AuthorAliases)
 }

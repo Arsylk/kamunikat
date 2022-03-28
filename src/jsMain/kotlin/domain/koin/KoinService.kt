@@ -18,6 +18,7 @@ import org.koin.core.qualifier.Qualifier
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatformTools
 import route.admin.authors.AdminAuthorsViewModel
+import route.admin.publications.AdminPublicationsViewModel
 import route.admin.users.AdminUsersViewModel
 import route.base.login.LoginViewModel
 
@@ -45,6 +46,8 @@ actual fun KoinApplication.setupKoinPlatform() {
 
             viewModel { AdminAuthorsViewModel(get()) }
             viewModel { AdminUsersViewModel(get()) }
+
+            viewModel { AdminPublicationsViewModel(get()) }
         }
     )
 }

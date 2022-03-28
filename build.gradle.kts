@@ -98,8 +98,10 @@ kotlin {
 
                 implementation("io.insert-koin:koin-ktor:3.1.5")
 
-                implementation("org.ktorm:ktorm-core:3.4.1")
-                implementation("org.ktorm:ktorm-support-mysql:3.4.1")
+                implementation("org.jetbrains.exposed:exposed-core:0.37.3")
+                implementation("org.jetbrains.exposed:exposed-dao:0.37.3")
+                implementation("org.jetbrains.exposed:exposed-jdbc:0.37.3")
+                implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.37.3")
                 implementation("mysql:mysql-connector-java:8.0.28")
 
                 implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2")

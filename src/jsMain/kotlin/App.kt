@@ -8,6 +8,7 @@ import react.router.Routes
 import react.router.dom.BrowserRouter
 import route.Route
 import route.admin.AdminPageRoute
+import route.admin.publications.AdminPublicationsPageRoute
 import route.admin.users.AdminUserAddPageRoute
 import route.admin.users.AdminUsersPageRoute
 import route.base.BasePage
@@ -37,8 +38,12 @@ val App = FC<Props> {
                     }
                 }
                 Route(AdminPageRoute) {
+                    // users
                     Route(AdminUsersPageRoute)
                     Route(AdminUserAddPageRoute)
+
+                    // publications
+                    Route(AdminPublicationsPageRoute)
                 }
             }
         }

@@ -1,36 +1,26 @@
 package domain.db
 
-import io.ktor.util.*
-import kotlinx.datetime.*
-import org.ktorm.schema.BaseTable
-import org.ktorm.schema.Column
-import org.ktorm.schema.SqlType
-import java.sql.*
+import kotlinx.datetime.toJavaInstant
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toKotlinLocalDate
+import model.db.user.User.Companion.transform
+import org.jetbrains.exposed.sql.Column
+import java.time.Instant
+import java.time.LocalDate
 
-object KotlinLocalDateSqlType : SqlType<LocalDate>(Types.DATE, "k_date") {
-    override fun doSetParameter(ps: PreparedStatement, index: Int, parameter: LocalDate) {
-        ps.setDate(index, Date.valueOf(parameter.toJavaLocalDate()))
-    }
+fun Column<Instant>.kInstant() = transform(
+    { k -> k.toJavaInstant() },
+    { j -> j.toKotlinInstant() },
+)
 
-    override fun doGetResult(rs: ResultSet, index: Int): LocalDate? {
-        return rs.getDate(index)?.toLocalDate()?.toKotlinLocalDate()
-    }
-}
+@JvmName("kDateNullable")
+fun Column<LocalDate?>.kDate() = transform(
+    { k -> k?.toJavaLocalDate() },
+    { j -> j?.toKotlinLocalDate() },
+)
 
-fun BaseTable<*>.kDate(name: String): Column<LocalDate> {
-    return registerColumn(name, KotlinLocalDateSqlType)
-}
-
-object KotlinLocalDateTimeSqlType : SqlType<LocalDateTime>(Types.TIMESTAMP, "k_datetime") {
-    override fun doSetParameter(ps: PreparedStatement, index: Int, parameter: LocalDateTime) {
-        ps.setTimestamp(index, Timestamp.valueOf(parameter.toJavaLocalDateTime()))
-    }
-
-    override fun doGetResult(rs: ResultSet, index: Int): LocalDateTime? {
-        return rs.getTimestamp(index)?.toLocalDateTime()?.toKotlinLocalDateTime()
-    }
-}
-
-fun BaseTable<*>.kDatetime(name: String): Column<LocalDateTime> {
-    return registerColumn(name, KotlinLocalDateTimeSqlType)
-}
+fun Column<LocalDate>.kDate() = transform(
+    { k -> k.toJavaLocalDate() },
+    { j -> j.toKotlinLocalDate() },
+)

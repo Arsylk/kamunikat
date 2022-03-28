@@ -1,31 +1,26 @@
 package test
 
-import model.db.category.Categories
+import domain.db.rawExec
 import model.db.category.Category
-import org.ktorm.database.Database
-import org.ktorm.database.asIterable
-import org.ktorm.entity.add
-import org.ktorm.entity.sequenceOf
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object MigrateCategories : IMigrate {
     override fun execute(db: Database, legacy: Database) {
-        first(db, legacy)
+        insertCategories(db, legacy)
     }
 
-    private fun first(db: Database, legacy: Database) {
-        val map = legacy.useConnection { conn ->
-            conn.prepareStatement(CATEGORY_QUERY).executeQuery()
-                .asIterable().associate {
-                    it.getInt("id") to it.getString("nazwa") as String
+    private fun insertCategories(db: Database, legacy: Database) {
+        val map = legacy.rawExec(CATEGORY_QUERY) { row ->
+            row.getInt("id") to row.getString("nazwa") as String
+        }.toMap()
+
+        transaction(db) {
+            map.forEach { (id, name) ->
+                Category.new(id = id) {
+                    this.name = name
                 }
-        }
-        map.forEach { entry ->
-            db.sequenceOf(Categories).add(
-                Category {
-                    id = entry.key
-                    name = entry.value
-                }
-            )
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ data class PaginatedRequest<T: Enum<T>>(
     @SerialName("order_select")
     val orderSelect: T? = null,
 ) {
+    val offset get() = (page * perPage).toLong()
 
     companion object {
         const val DefaultPage = 0

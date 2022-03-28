@@ -41,7 +41,7 @@ fun <T> produceState(
     val state = useState(initialValue)
     val scope by useState { MainScope() }
 
-    useEffect(key ?: emptyArray<dynamic>()) {
+    useEffect(key ?: Unit) {
         scope.launch {
             block.invoke(state.component2())
         }

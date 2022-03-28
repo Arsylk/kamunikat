@@ -1,59 +1,50 @@
 package test
 
+import domain.db.rawExec
 import model.db.catalog.Catalog
 import model.db.catalog.Catalogs
-import org.ktorm.database.Database
-import org.ktorm.database.asIterable
-import org.ktorm.entity.add
-import org.ktorm.entity.sequenceOf
-import org.ktorm.entity.toList
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object MigrateCatalogs : IMigrate {
     override fun execute(db: Database, legacy: Database) {
-        //first(db, legacy)
-        //pubIdToCatalogIds(db, legacy)
+        insertCatalogs(db)
     }
 
 
-    private fun first(db: Database, legacy: Database) {
-        CATALOG_NAMES.forEach { name ->
-            db.sequenceOf(Catalogs).add(
-                Catalog {
-                    this.name = name
+    private fun insertCatalogs(db: Database) {
+        transaction(db) {
+            CATALOGS.forEach { item ->
+                Catalog.new {
+                    name = item.name
+                    letter = item.letter
+                    hasInventory = item.hasInventory
                 }
-            )
+            }
         }
     }
 
-    private fun pubIdToCatalogIds(db: Database, legacy: Database) {
-        val catalogs = db.sequenceOf(Catalogs).toList()
-        val map = legacy.useConnection { conn ->
-            conn.prepareStatement(CATALOGS_QUERY).executeQuery()
-                .asIterable().associate {
-                    val id = it.getInt("id")
-                    val raw = it.getString("raw_catalog") as String
-
-                    id to catalogs.filter { c -> raw.contains(c.name, ignoreCase = true) }
-                }
-        }
-    }
-
-    private fun searchRaw(db: Database, legacy: Database) {
-        val list = legacy.useConnection { conn ->
-            conn.prepareStatement(CATALOGS_QUERY).executeQuery()
-                .asIterable().map { it.getString("name") }
-                .flatMap { it.split(",") }
-                .map { it.trim() }
-        }.toSet()
+    private fun searchRaw(legacy: Database) {
+        val list = legacy.rawExec(CATALOGS_QUERY) { row ->
+            row.getString("name").split(",").map(String::trim)
+        }.flatten().toSet()
         println(list)
     }
 
 }
 
+private data class BaseCatalog(val name: String, val letter: Char?, val hasInventory: Boolean)
+
 private val CATALOGS_QUERY = """
     SELECT id, lokalizacja as raw_catalog FROM amlib_publikacje 
     WHERE lokalizacja IS NOT NULL AND lokalizacja <> ""
 """.trimIndent()
-private val CATALOG_NAMES = setOf(
-    "KAMUNIKAT", "JAREK", "MiOKB", "EEDC", "BTH", "SKARYNA"
+private val CATALOGS = listOf(
+    BaseCatalog("KAMUNIKAT", null, false),
+    BaseCatalog("JAREK", null, false),
+    BaseCatalog("MiOKB", 'M', true),
+    BaseCatalog("EEDC", 'E', true),
+    BaseCatalog("BTH", 'B', true),
+    BaseCatalog("SKARYNA", null, false),
 )
