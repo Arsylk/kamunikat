@@ -3,7 +3,8 @@ package model.api
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
-import model.common.SortSelectable
+import model.common.EmptySortable
+import model.common.Sortable
 
 @kotlinx.serialization.Serializable
 data class Publication(
@@ -73,13 +74,7 @@ data class Publication(
     val createdAt: Instant,
     @SerialName("updated_at")
     val updatedAt: Instant,
-) : SortSelectable<PublicationField> {
-
-    override fun select(field: PublicationField): Comparable<*> = when (field) {
-        PublicationField.Id -> id
-        PublicationField.Title -> title
-    }
-}
+) : EmptySortable
 
 @kotlinx.serialization.Serializable
 enum class PublicationField {

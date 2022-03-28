@@ -1,6 +1,7 @@
 package model.api.catalog
 
 import kotlinx.serialization.SerialName
+import model.common.Sortable
 
 @kotlinx.serialization.Serializable
 data class Catalog(
@@ -12,4 +13,15 @@ data class Catalog(
     val letter: Char?,
     @SerialName("has_inventory")
     val hasInventory: Boolean,
-)
+) : Sortable<CatalogField> {
+
+    override fun select(field: CatalogField) = when (field) {
+        CatalogField.Id -> id
+        CatalogField.Name -> name
+        CatalogField.Letter -> letter
+        CatalogField.HasInventory -> hasInventory
+    }
+}
+
+@kotlinx.serialization.Serializable
+enum class CatalogField { Id, Name, Letter, HasInventory }

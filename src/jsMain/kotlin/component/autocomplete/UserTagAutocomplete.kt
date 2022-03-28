@@ -2,28 +2,19 @@ package component.autocomplete
 
 import csstype.*
 import domain.api.ApiService
-import domain.base.LaunchedEffect
-import domain.base.produceState
 import domain.base.useScope
 import domain.koin.get
 import domain.koin.inject
 import domain.onValueChanged
-import domain.use
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.js.jso
 import model.user.UserTag
-import mui.base.AutocompleteChangeReason
-import mui.icons.material.AddCircle
 import mui.material.*
-import mui.material.Size
 import mui.system.ResponsiveStyleValue
 import react.*
 import react.dom.html.ButtonType
 import react.dom.html.InputType
 import react.dom.html.ReactHTML.form
-import react.dom.html.ReactHTML.h1
-import react.dom.html.ReactHTML.li
 
 external interface UserTagAutocompleteProps : Props {
     var initialTags: Set<UserTag>?
@@ -34,7 +25,7 @@ val UserTagAutocomplete = FC<UserTagAutocompleteProps> { props ->
     @Suppress("UPPER_BOUND_VIOLATED")
     ApiAutocomplete<ApiAutocompleteProps<UserTag>> {
         label = "Tags"
-        initialValues = props.initialTags
+        value = props.initialTags.orEmpty()
 
         fetch = { service.getUserTags() }
         comparator = { t1, t2 -> t1.id == t2.id }

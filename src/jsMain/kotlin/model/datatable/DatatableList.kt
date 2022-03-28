@@ -1,9 +1,9 @@
 package model.datatable
 
 import model.common.Order
-import model.common.SortSelectable
+import model.common.Sortable
 
-data class DatatableList<T: Enum<T>, R: SortSelectable<T>>(
+data class DatatableList<T: Enum<T>, R: Sortable<T>>(
     val page: Int,
     val perPage: Int,
     val order: Order?,

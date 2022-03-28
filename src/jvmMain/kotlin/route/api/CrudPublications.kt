@@ -27,16 +27,16 @@ fun Route.crudPublications() {
                     .orderBy(Publications.id to SortOrder.ASC)
                     .map(Publication::toCommon) to Publication.countInt()
             }
-            call.respond(
-                PaginatedResponse(
-                    page = params.page,
-                    perPage = params.perPage,
-                    order = params.order,
-                    orderSelect = params.orderSelect,
-                    fullSize = list.second,
-                    items = list.first,
-                )
-            )
+//            call.respond(
+//                PaginatedResponse(
+//                    page = params.page,
+//                    perPage = params.perPage,
+//                    order = params.order,
+//                    orderSelect = params.orderSelect,
+//                    fullSize = list.second,
+//                    items = list.first,
+//                )
+//            )
         }
     }
 }

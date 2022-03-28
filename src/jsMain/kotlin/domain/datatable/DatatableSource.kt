@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.*
 import model.api.PaginatedRequest
 import model.api.PaginatedResponse
 import model.common.Order
-import model.common.SortSelectable
+import model.common.Sortable
 
 @OptIn(ExperimentalCoroutinesApi::class)
-abstract class DatatableSource<Field: Enum<Field>, Item: SortSelectable<Field>>(
+abstract class DatatableSource<Item: Sortable<Field>, Field: Enum<Field>>(
     private val initialPage: Int,
     private val initialPerPage: Int,
 ) {
@@ -20,7 +20,7 @@ abstract class DatatableSource<Field: Enum<Field>, Item: SortSelectable<Field>>(
     )
     private val _operation = MutableStateFlow<Operation>(Operation.Idle)
     val operation = _operation.asStateFlow()
-    val state = channelFlow<State<Field, Item>> {
+    val state = channelFlow {
         request.collectLatest { req ->
             _operation.value = Operation.Loading
 
@@ -43,7 +43,7 @@ abstract class DatatableSource<Field: Enum<Field>, Item: SortSelectable<Field>>(
             }
         }
     }
-    val initialState = State<Field, Item>(
+    val initialState = State<Item, Field>(
         page = initialPage,
         perPage = initialPerPage,
         order = null,
@@ -52,7 +52,7 @@ abstract class DatatableSource<Field: Enum<Field>, Item: SortSelectable<Field>>(
         items = emptyList(),
     )
 
-    fun stateIn(scope: CoroutineScope): StateFlow<State<Field, Item>> = state.stateIn(
+    fun stateIn(scope: CoroutineScope): StateFlow<State<Item, Field>> = state.stateIn(
         scope, SharingStarted.WhileSubscribed(), initialState
     )
 
@@ -73,7 +73,7 @@ abstract class DatatableSource<Field: Enum<Field>, Item: SortSelectable<Field>>(
         perPage: Int,
         order: Order?,
         orderSelect: Field?,
-    ): PaginatedResponse<Field, Item>
+    ): PaginatedResponse<Item, Field>
 
 
     private data class DatasourceRequest<T: Enum<T>>(
@@ -83,7 +83,7 @@ abstract class DatatableSource<Field: Enum<Field>, Item: SortSelectable<Field>>(
         val orderSelect: T?,
     )
 
-    data class State<Field: Enum<Field>, Item: SortSelectable<Field>>(
+    data class State<Item: Sortable<Field>, Field: Enum<Field>>(
         val page: Int,
         val perPage: Int,
         val order: Order?,
@@ -99,15 +99,15 @@ abstract class DatatableSource<Field: Enum<Field>, Item: SortSelectable<Field>>(
     }
 }
 
-fun <T: Enum<T>, R: SortSelectable<T>> DatatableSource(
+fun <Item: Sortable<Field>, Field : Enum<Field>> DatatableSource(
     page: Int = PaginatedRequest.DefaultPage,
     perPage: Int = PaginatedRequest.DefaultPerPage,
-    fetch: suspend (Int, Int, Order?, T?) -> PaginatedResponse<T, R>,
-) = object : DatatableSource<T, R>(page, perPage) {
+    fetch: suspend (Int, Int, Order?, Field?) -> PaginatedResponse<Item, Field>,
+) = object : DatatableSource<Item, Field>(page, perPage) {
     override suspend fun fetch(
         page: Int,
         perPage: Int,
         order: Order?,
-        orderSelect: T?,
-    ): PaginatedResponse<T, R> = fetch(page, perPage, order, orderSelect)
+        orderSelect: Field?,
+    ): PaginatedResponse<Item, Field> = fetch(page, perPage, order, orderSelect)
 }

@@ -49,6 +49,8 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
 
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+
                 implementation("io.insert-koin:koin-core:3.1.5")
             }
         }

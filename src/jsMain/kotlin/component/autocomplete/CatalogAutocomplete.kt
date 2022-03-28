@@ -7,7 +7,7 @@ import react.FC
 import react.Props
 
 external interface CatalogAutocompleteProps : Props {
-    var initial: Set<Catalog>?
+    var value: Set<Catalog>
     var onChange: (Set<Catalog>) -> Unit
 }
 val CatalogAutocomplete = FC<CatalogAutocompleteProps> { props ->
@@ -15,8 +15,12 @@ val CatalogAutocomplete = FC<CatalogAutocompleteProps> { props ->
     @Suppress("UPPER_BOUND_VIOLATED")
     ApiAutocomplete<ApiAutocompleteProps<Catalog>> {
         label = "Catalogs"
-        initialValues = props.initial
+        value = props.value
+        onChange = props.onChange
 
-        fetch = { service.getCatalogs() }
+        fetch = { service.catalog.getList() }
+        comparator = { t1, t2 -> t1.id == t2.id }
+        filter = { t, s -> t.name.contains(s, ignoreCase = true) }
+        represent = { t -> t.name }
     }
 }

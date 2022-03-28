@@ -15,8 +15,8 @@ import react.dom.html.ReactHTML.li
 external interface ApiAutocompleteProps<Item: Any> : Props {
     var label: String
 
-    var initialValues: Set<Item>?
-    var onValueChange: (Set<Item>) -> Unit
+    var value: Set<Item>
+    var onChange: (Set<Item>) -> Unit
     var fetch: suspend () -> List<Item>
 
     var comparator: ((Item, Item) -> Boolean)?
@@ -25,25 +25,19 @@ external interface ApiAutocompleteProps<Item: Any> : Props {
 
     var dialog: FC<ApiAutocompleteDialogProps>
 }
-val ApiAutocomplete = FC<ApiAutocompleteProps<*>> { rawProps ->
+val ApiAutocomplete = FC<ApiAutocompleteProps<out Any>> { rawProps ->
     val props = rawProps.unsafeCast<ApiAutocompleteProps<Any>>()
 
     var counter by useState(0)
     var allValues by useState(emptyArray<Any>())
-    var isOpen by useState(false)
+//    var isOpen by useState(false)
     var isLoading by useState(true)
     LaunchedEffect(counter) {
         isLoading = true
         // TODO is error handing
-        kotlin.runCatching {
-            console.log("fetching ...")
-            allValues = props.fetch().toTypedArray()
-            console.log("doen ! ...")
-        }
+        kotlin.runCatching { allValues = props.fetch().toTypedArray() }
         isLoading = false
     }
-    var selectedValues by useState<Set<Any>>(emptySet())
-    useEffect(props.initialValues) { use(props.initialValues) { selectedValues = it } }
 
     var dialogInput by useState<String?>(null)
 
@@ -67,7 +61,7 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<*>> { rawProps ->
             freeSolo = true
             multiple = true
             clearOnBlur = true
-            value = selectedValues.toTypedArray()
+            value = props.value.toTypedArray()
             loading = isLoading
             loadingText = ReactNode("231")
 
@@ -113,12 +107,12 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<*>> { rawProps ->
                         dialogInput = input
                     }
                     AutocompleteChangeReason.selectOption -> use(newValue as? Array<UserTag>) { values ->
-                        selectedValues = values.toSet()
+                        props.onChange(values.toSet())
                     }
                     AutocompleteChangeReason.removeOption -> use(newValue as? Array<UserTag>) { values ->
-                        selectedValues = values.toSet()
+                        props.onChange(values.toSet())
                     }
-                    AutocompleteChangeReason.clear -> selectedValues = emptySet()
+                    AutocompleteChangeReason.clear -> props.onChange(emptySet())
                     else -> {}
                 }
             }

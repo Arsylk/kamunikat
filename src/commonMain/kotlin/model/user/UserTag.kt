@@ -1,7 +1,7 @@
 package model.user
 
 import kotlinx.serialization.SerialName
-import model.common.SortSelectable
+import model.common.Sortable
 
 @kotlinx.serialization.Serializable
 data class UserTag(
@@ -9,7 +9,7 @@ data class UserTag(
     val id: Int,
     @SerialName("name")
     val name: String,
-) : SortSelectable<UserTagField> {
+) : Sortable<UserTagField> {
 
     override fun select(field: UserTagField): Comparable<*> = when (field) {
         UserTagField.Id -> id

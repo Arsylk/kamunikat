@@ -9,11 +9,10 @@ import component.datatable.toolbar.DatatableToolbar
 import csstype.*
 import domain.base.FCScope
 import domain.base.collectAsState
-import domain.base.useScope
 import domain.datatable.DatatableSource
 import kotlinx.js.jso
 import model.common.Order
-import model.common.SortSelectable
+import model.common.Sortable
 import mui.material.*
 import mui.material.Size
 import react.FC
@@ -124,7 +123,7 @@ val Datatable = FC<DatatableProps<*, *>> { _props ->
 
 
 @FCScope
-fun <Field: Enum<Field>, Item: SortSelectable<Field>> DatatableProps<Field, Item>.bindSource(
+fun <Field: Enum<Field>, Item: Sortable<Field>> DatatableProps<Field, Item>.bindSource(
     source: DatatableSource<Field, Item>,
 ) {
     val dsState = source.state.collectAsState(source.initialState)
