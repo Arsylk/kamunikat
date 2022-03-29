@@ -1,10 +1,12 @@
 package model.db.author
 
+import domain.db.idInt
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
+import model.api.author.AuthorAlias as CommonAuthorAlias
 
 object AuthorAliases : IntIdTable("author_alias") {
     val authorId = reference("author_id", Authors,
@@ -20,3 +22,8 @@ class AuthorAlias(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<AuthorAlias>(AuthorAliases)
 }
+
+fun AuthorAlias.toCommon() = CommonAuthorAlias(
+    id = idInt,
+    name = name,
+)

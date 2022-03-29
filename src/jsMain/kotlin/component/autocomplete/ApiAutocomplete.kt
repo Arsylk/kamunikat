@@ -53,9 +53,7 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<out Any>> { rawProps ->
 
         @Suppress("UPPER_BOUND_VIOLATED")
         Autocomplete<AutocompleteProps<Any>> {
-            sx = jso {
-                flexGrow = FlexGrow(1.0)
-            }
+            sx = jso { flexGrow = FlexGrow(1.0) }
 
             options = allValues
             freeSolo = true

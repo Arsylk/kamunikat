@@ -3,15 +3,13 @@ package component.autocomplete
 import csstype.px
 import domain.api.ApiService
 import domain.base.useScope
-import domain.koin.get
 import domain.koin.inject
 import domain.onValueChanged
 import domain.update
-import domain.value
 import kotlinx.coroutines.launch
 import kotlinx.js.jso
+import model.api.author.Author
 import model.api.catalog.Catalog
-import model.user.UserTag
 import mui.material.*
 import mui.system.ResponsiveStyleValue
 import react.*
@@ -19,43 +17,47 @@ import react.dom.html.ButtonType
 import react.dom.html.InputType
 import react.dom.html.ReactHTML
 
-external interface CatalogAutocompleteProps : Props {
-    var value: Set<Catalog>
-    var onChange: (Set<Catalog>) -> Unit
+external interface AuthorAutocompleteProps : Props {
+    var value: Set<Author>
+    var onChange: (Set<Author>) -> Unit
 }
-val CatalogAutocomplete = FC<CatalogAutocompleteProps> { props ->
+val AuthorAutocomplete = FC<AuthorAutocompleteProps> { props ->
     val service by inject<ApiService>()
     @Suppress("UPPER_BOUND_VIOLATED")
-    ApiAutocomplete<ApiAutocompleteProps<Catalog>> {
+    ApiAutocomplete<ApiAutocompleteProps<Author>> {
         label = "Catalogs"
         value = props.value
         onChange = props.onChange
 
-        fetch = { service.catalog.getList() }
+        fetch = { service.author.getList() }
         comparator = { t1, t2 -> t1.id == t2.id }
-        filter = { t, s -> t.name.contains(s, ignoreCase = true) }
-        represent = { t -> t.name }
+        filter = { t, s ->
+            (setOf(t.name) + t.aliases.map { it.name }.toSet())
+                .any { it.contains(s, ignoreCase = true) }
+        }
+        represent = { t -> if (t.hasInfo) "[${t.name}]" else t.name }
         dialog = FormDialog
     }
 }
+
 private val FormDialog = FC<ApiAutocompleteDialogProps> { props ->
     val service by inject<ApiService>()
     val scope = useScope()
 
-    val (catalog, update) = useState(Catalog(0, "", null, false))
+    val (author, update) = useState(Author(0, "", emptyList(), false))
     useEffect(props.input) { update.update { copy(name = props.input) } }
 
     ReactHTML.form {
         onSubmit = { e ->
             e.preventDefault()
             scope.launch {
-                service.catalog.add(catalog)
+                service.author.add(author)
                 props.dismiss(true)
             }
             e.stopPropagation()
         }
 
-        DialogTitle { +"Add Catalog" }
+        DialogTitle { +"Add Author" }
         DialogContent {
             Grid {
                 container = true
@@ -71,35 +73,8 @@ private val FormDialog = FC<ApiAutocompleteDialogProps> { props ->
                         label = ReactNode("Name")
                         variant = FormControlVariant.outlined
                         type = InputType.text
-                        value = catalog.name
+                        value = author.name
                         onValueChanged { update.update { copy(name = it) } }
-                    }
-                }
-                Grid {
-                    sx = jso { marginTop = 8.px }
-                    item = true
-                    xs = 12
-                    TextField {
-                        fullWidth = true
-                        label = ReactNode("Letter")
-                        variant = FormControlVariant.outlined
-                        type = InputType.text
-                        value = catalog.letter?.toString() ?: ""
-                        onValueChanged { update.update { copy(letter = it.firstOrNull()) } }
-                    }
-                }
-                Grid {
-                    sx = jso { marginTop = 8.px }
-                    item = true
-                    xs = 12
-                    FormControlLabel {
-                        label = ReactNode("Has Inventory")
-                        control = Checkbox.create {
-                            checked = catalog.hasInventory
-                            onChange = { _, checked ->
-                                update.update { copy(hasInventory = checked) }
-                            }
-                        }
                     }
                 }
             }

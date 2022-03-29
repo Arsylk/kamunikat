@@ -74,7 +74,13 @@ data class Publication(
     val createdAt: Instant,
     @SerialName("updated_at")
     val updatedAt: Instant,
-) : EmptySortable
+) : Sortable<PublicationField> {
+
+    override fun select(field: PublicationField): Comparable<*> = when (field) {
+        PublicationField.Id -> id
+        PublicationField.Title -> title
+    }
+}
 
 @kotlinx.serialization.Serializable
 enum class PublicationField {

@@ -1,5 +1,6 @@
 package route.admin.publications
 
+import component.autocomplete.CatalogAutocomplete
 import component.datatable.Datatable
 import component.datatable.DatatableProps
 import component.datatable.bindSource
@@ -10,6 +11,7 @@ import component.datatable.row.DatatableRowProps
 import domain.base.useViewModel
 import model.api.Publication
 import model.api.PublicationField
+import model.api.catalog.Catalog
 import model.common.Order
 import model.common.cycle
 import model.user.UserField
@@ -18,8 +20,10 @@ import react.Props
 import react.create
 import react.router.RouteProps
 import react.router.useNavigate
+import react.useState
 import route.Route
 import route.admin.AdminPageRoute
+import route.admin.users.AdminUserAddPageRoute
 import route.admin.users.AdminUsersViewModel
 
 object AdminPublicationsPageRoute : Route {
@@ -41,11 +45,11 @@ val AdminPublicationsPage = FC<Props> {
 
         title = "Publications"
         keySelector = { it.id }
+        onAdd = { navigate(AdminPublicationAddPageRoute.absolutePath) }
 
         RenderHeader = RenderPublicationHeader
         RenderRow = RenderPublicationRow
     }
-
 }
 
 @Suppress("UPPER_BOUND_VIOLATED")

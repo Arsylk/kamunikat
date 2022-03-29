@@ -124,7 +124,7 @@ val Datatable = FC<DatatableProps<*, *>> { _props ->
 
 @FCScope
 fun <Field: Enum<Field>, Item: Sortable<Field>> DatatableProps<Field, Item>.bindSource(
-    source: DatatableSource<Field, Item>,
+    source: DatatableSource<Item, Field>,
 ) {
     val dsState = source.state.collectAsState(source.initialState)
     val operation = source.operation.collectAsState()

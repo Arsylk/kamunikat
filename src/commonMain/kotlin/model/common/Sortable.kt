@@ -20,4 +20,4 @@ fun <T: Enum<T>, R: Sortable<T>> Iterable<R>.sortedBy(
 
 
 enum class EmptyEnum
-interface EmptySortable : Sortable<EmptyEnum> { override fun select(field: EmptyEnum) = null }
+interface EmptySortable : Sortable<EmptyEnum> { override fun select(field: EmptyEnum): Comparable<*>? = null }

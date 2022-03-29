@@ -15,7 +15,7 @@ data class Catalog(
     val hasInventory: Boolean,
 ) : Sortable<CatalogField> {
 
-    override fun select(field: CatalogField) = when (field) {
+    override fun select(field: CatalogField): Comparable<*>? = when (field) {
         CatalogField.Id -> id
         CatalogField.Name -> name
         CatalogField.Letter -> letter

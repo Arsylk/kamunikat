@@ -6,4 +6,6 @@ import kotlinx.serialization.SerialName
 data class SuccessResponse(
     @SerialName("success")
     val success: Boolean = true
-)
+) {
+    constructor(result: Result<*>) : this(result.isSuccess)
+}
