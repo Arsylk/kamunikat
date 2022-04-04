@@ -1,6 +1,7 @@
 package route.base
 
 import csstype.FlexGrow
+import csstype.number
 import csstype.rem
 import domain.auth.AuthService
 import domain.auth.UserContext
@@ -29,7 +30,7 @@ val BasePage = FC<Props> {
     ThemeProvider {
         theme = BaseTheme
         Box {
-            sx = jso { flexGrow = FlexGrow(1.0) }
+            sx = jso { flexGrow = number(1.0) }
             AppBar {
                 position = AppBarPosition.static
                 Toolbar {
@@ -41,7 +42,7 @@ val BasePage = FC<Props> {
                         MenuIcon()
                     }
                     Typography {
-                        sx = jso { flexGrow = FlexGrow(1.0) }
+                        sx = jso { flexGrow = number(1.0) }
                         variant = "h6"
                         component = ReactHTML.div
 

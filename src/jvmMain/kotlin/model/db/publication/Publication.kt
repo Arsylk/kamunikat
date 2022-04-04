@@ -1,20 +1,17 @@
 package model.db.publication
 
 import domain.db.idInt
-import kotlinx.serialization.SerialName
 import model.db.author.Author
 import model.db.catalog.Catalog
 import model.db.category.Category
 import model.db.periodical.Periodical
-import model.db.periodical.Periodicals
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
-import model.api.Publication as CommonPublication
+import model.api.publication.Publication as CommonPublication
 
 object Publications : IntIdTable("publication") {
     val isPublished = bool("is_published").default(false)

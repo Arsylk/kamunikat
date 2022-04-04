@@ -4,6 +4,7 @@ import component.autocomplete.UserTagAutocomplete
 import csstype.FlexGrow
 import csstype.Padding
 import csstype.em
+import csstype.number
 import domain.onValueChanged
 import kotlinx.js.jso
 import model.api.user.AddUserRequest
@@ -32,7 +33,7 @@ val AdminUserAddPage = FC<Props> {
 
     Box {
         sx = jso {
-            flexGrow = FlexGrow(1.0)
+            flexGrow = number(1.0)
             padding = Padding(2.em, 2.em)
         }
         Paper {

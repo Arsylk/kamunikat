@@ -23,7 +23,7 @@ abstract class DbCmsPattern<Entity: IntEntity, Common: Any> : CmsPattern<Common>
 
     open fun IntEntityClass<Entity>.getQuery(id: Int): Entity = get(id)
 
-    open fun IntEntityClass<Entity>.listQuery(): SizedIterable<Entity> = all()
+    open fun IntEntityClass<Entity>.listQuery(): Iterable<Entity> = all()
 
 
     override suspend fun getList(): List<Common> {

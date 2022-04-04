@@ -33,12 +33,11 @@ val CatalogAutocomplete = FC<CatalogAutocompleteProps> { props ->
 
         fetch = { service.catalog.getList() }
         comparator = { t1, t2 -> t1.id == t2.id }
-        filter = { t, s -> t.name.contains(s, ignoreCase = true) }
         represent = { t -> t.name }
         dialog = FormDialog
     }
 }
-private val FormDialog = FC<ApiAutocompleteDialogProps> { props ->
+private val FormDialog = FC<ApiAutocompleteDialogProps<Catalog>> { props ->
     val service by inject<ApiService>()
     val scope = useScope()
 

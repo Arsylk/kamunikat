@@ -3,6 +3,7 @@ package test
 import domain.koin.setupKoinPlatform
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import model.db.aphorism.Aphorisms
 import model.db.author.AuthorAliases
 import model.db.author.AuthorContents
 import model.db.author.AuthorInfos
@@ -39,8 +40,10 @@ fun main(args: Array<String>) {
 //    MigratePeriodicals.execute(db, legacy)
 //    MigrateMedia.execute(db, legacy)
 //    MigratePeriodicals.execute(db, legacy)
+//    MigrateAphorisms.execute(db, legacy)
 }
 private val tables = listOf<Table>(
+    Aphorisms,
     Authors, AuthorAliases, AuthorContents, AuthorInfos,
     Catalogs,
     Categories,

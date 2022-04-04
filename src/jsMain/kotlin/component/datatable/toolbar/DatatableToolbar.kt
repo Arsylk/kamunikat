@@ -1,6 +1,7 @@
 package component.datatable.toolbar
 
 import csstype.FlexGrow
+import csstype.number
 import domain.onClickEvent
 import kotlinx.js.jso
 import mui.material.Button
@@ -21,7 +22,7 @@ val DatatableToolbar = FC<DatatableToolbarProps> { props ->
         Typography {
             variant = "h6"
             component = ReactHTML.div
-            sx = jso { flexGrow = FlexGrow(1.0) }
+            sx = jso { flexGrow = number(1.0) }
             +props.title.orEmpty()
         }
         if (props.onAdd != null) Button {

@@ -1,6 +1,7 @@
 package domain.base
 
 import domain.koin.scopeId
+import domain.value
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +33,11 @@ fun useScope(tag: String? = null): CoroutineScope {
 }
 
 
+class ProduceStateScope<T> internal constructor(private val state: StateInstance<T>) {
+    var value: T
+        set(value) { state.component2().invoke(value) }
+        get() = state.value
+}
 @FCScope
 fun <T> produceState(
     initialValue: T,
@@ -42,6 +48,7 @@ fun <T> produceState(
     val scope by useState { MainScope() }
 
     useEffect(key ?: Unit) {
+        val stateScope = ProduceStateScope(state)
         scope.launch {
             block.invoke(state.component2())
         }

@@ -1,6 +1,5 @@
 package route.admin.publications
 
-import component.autocomplete.CatalogAutocomplete
 import component.datatable.Datatable
 import component.datatable.DatatableProps
 import component.datatable.bindSource
@@ -9,22 +8,17 @@ import component.datatable.header.DatatableHeaderCell
 import component.datatable.header.DatatableHeaderProps
 import component.datatable.row.DatatableRowProps
 import domain.base.useViewModel
-import model.api.Publication
-import model.api.PublicationField
-import model.api.catalog.Catalog
+import model.api.publication.Publication
+import model.api.publication.PublicationField
 import model.common.Order
 import model.common.cycle
-import model.user.UserField
 import react.FC
 import react.Props
 import react.create
 import react.router.RouteProps
 import react.router.useNavigate
-import react.useState
 import route.Route
 import route.admin.AdminPageRoute
-import route.admin.users.AdminUserAddPageRoute
-import route.admin.users.AdminUsersViewModel
 
 object AdminPublicationsPageRoute : Route {
     override val path = "publications"

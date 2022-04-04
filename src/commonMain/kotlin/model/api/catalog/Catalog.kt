@@ -1,19 +1,20 @@
 package model.api.catalog
 
 import kotlinx.serialization.SerialName
+import model.common.IntId
 import model.common.Sortable
 
 @kotlinx.serialization.Serializable
 data class Catalog(
     @SerialName("id")
-    val id: Int,
+    override val id: Int,
     @SerialName("name")
     val name: String,
     @SerialName("letter")
     val letter: Char?,
     @SerialName("has_inventory")
     val hasInventory: Boolean,
-) : Sortable<CatalogField> {
+) : Sortable<CatalogField>, IntId {
 
     override fun select(field: CatalogField): Comparable<*>? = when (field) {
         CatalogField.Id -> id

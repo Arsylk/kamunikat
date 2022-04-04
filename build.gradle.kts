@@ -36,9 +36,6 @@ kotlin {
         binaries.executable()
     }
     sourceSets {
-        fun kWrapper(name: String, version: String) =
-            "org.jetbrains.kotlin-wrappers:kotlin-$name:$version-pre.301-kotlin-1.6.10"
-
         val coroutinesVersion = "1.6.0"
         val ktorVersion = "1.6.7"
 
@@ -55,6 +52,9 @@ kotlin {
             }
         }
         val jsMain by getting {
+            fun kWrapper(name: String) = "org.jetbrains.kotlin-wrappers:kotlin-$name"
+            val kWrappersBom = "wrappers-bom:0.0.1-pre.325-kotlin-1.6.10"
+
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:$coroutinesVersion")
 
@@ -62,24 +62,19 @@ kotlin {
                 implementation("io.ktor:ktor-client-json:$ktorVersion")
                 implementation("io.ktor:ktor-client-serialization:$ktorVersion")
 
-                val reactVersion = "17.0.2"
-                implementation(npm("react", reactVersion))
-                implementation(npm("react-dom", reactVersion))
-                implementation(kWrapper("react", reactVersion))
-                implementation(kWrapper("react-dom", reactVersion))
-                implementation(kWrapper("react-css", reactVersion))
+                implementation(project.dependencies.enforcedPlatform(kWrapper(kWrappersBom)))
+                implementation(kWrapper("react"))
+                implementation(kWrapper("react-dom"))
+                implementation(kWrapper("react-css"))
+                implementation(kWrapper("react-router-dom"))
 
-                implementation(npm("@babel/core", "7.0.0"))
-                implementation(npm("@mui/material", "5.4.2"))
-                implementation(npm("@mui/icons-material", "5.4.2"))
-                implementation(kWrapper("mui", "5.4.2"))
-                implementation(kWrapper("mui-icons", "5.4.2"))
+                implementation(kWrapper("mui"))
+                implementation(kWrapper("mui-icons"))
+                implementation(npm("@emotion/react", "11.8.2"))
+                implementation(npm("@emotion/styled", "11.8.1"))
 
-                implementation(npm("@emotion/react", "11.7.1"))
-                implementation(npm("@emotion/styled", "11.6.0"))
-
-                implementation(npm("react-router-dom", "6.2.1"))
-                implementation(kWrapper("react-router-dom", "6.2.1"))
+                implementation(npm("react-window", "1.8.6"))
+                implementation(npm("date-fns", "2.28.0"))
             }
         }
         val jvmMain by getting {

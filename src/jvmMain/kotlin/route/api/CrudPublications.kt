@@ -5,23 +5,17 @@ import domain.db.countInt
 import domain.receivePaginatedRequest
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.http.*
-import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import model.api.PaginatedResponse
-import model.api.PublicationField
+import model.api.publication.PublicationField
 import model.cms.AuthorCmsPattern
 import model.cms.CatalogCmsPattern
+import model.cms.CategoryCmsPattern
 import model.cms.cmsPattern
-import model.db.catalog.Catalog
-import model.api.catalog.Catalog as CommonCatalog
-import model.db.category.Category
 import model.db.publication.Publication
 import model.db.publication.Publications
 import model.db.publication.toCommon
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -32,6 +26,7 @@ fun Route.crudPublications() {
     authenticate(AuthService.JwtAuthName) {
         cmsPattern("catalog", CatalogCmsPattern)
         cmsPattern("author", AuthorCmsPattern)
+        cmsPattern("category", CategoryCmsPattern)
 
         get("publications") {
             val params = call.receivePaginatedRequest<PublicationField>()

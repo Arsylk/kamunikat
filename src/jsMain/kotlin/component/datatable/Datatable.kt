@@ -60,9 +60,7 @@ val Datatable = FC<DatatableProps<*, *>> { _props ->
             }
             TableContainer {
                 Table {
-                    sx = jso {
-                        size = Size.medium
-                    }
+                    size = Size.medium
 
                     TableHead {
                         TableRow {

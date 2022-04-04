@@ -1,15 +1,15 @@
-package model.api
+package model.api.publication
 
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
-import model.common.EmptySortable
+import model.common.IntId
 import model.common.Sortable
 
 @kotlinx.serialization.Serializable
 data class Publication(
     @SerialName("id")
-    val id: Int,
+    override val id: Int,
     @SerialName("is_published")
     val isPublished: Boolean,
     @SerialName("is_periodical")
@@ -74,7 +74,7 @@ data class Publication(
     val createdAt: Instant,
     @SerialName("updated_at")
     val updatedAt: Instant,
-) : Sortable<PublicationField> {
+) : Sortable<PublicationField>, IntId {
 
     override fun select(field: PublicationField): Comparable<*> = when (field) {
         PublicationField.Id -> id

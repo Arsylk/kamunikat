@@ -2,15 +2,87 @@ package component.autocomplete
 
 import csstype.*
 import domain.base.LaunchedEffect
+import domain.base.produceState
 import domain.use
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
+import kotlinx.datetime.Clock
 import kotlinx.js.jso
 import model.user.UserTag
 import mui.base.AutocompleteChangeReason
+import mui.base.AutocompleteInputChangeReason
 import mui.icons.material.AddCircle
 import mui.material.*
 import mui.material.Size
+import mui.system.sx
+import npm.react.window.VariableSizeList
+import npm.react.window.VariableSizeListClass
+import org.w3c.dom.HTMLDivElement
+import org.w3c.dom.HTMLElement
 import react.*
+import react.dom.html.HTMLAttributes
+import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.li
+import kotlin.time.DurationUnit
+
+
+private fun useResetCache(data: Any): RefObject<VariableSizeListClass<*>> {
+    val ref = useRef<VariableSizeListClass<*>>(null)
+    useEffect(data) {
+        use(ref.current) { it.resetAfterIndex(0, true) }
+    }
+    return ref
+}
+private val OuterElementContext = createContext(jso<Props>())
+private val OuterElementType = rawForwardRef<HTMLDivElement, PropsWithRef<HTMLDivElement>> { props, ref ->
+    val outerProps = useContext(OuterElementContext)
+    div.create {
+        this.ref = ref
+        +props
+        +outerProps
+    }
+}
+
+
+@Suppress("UPPER_BOUND_VIOLATED")
+private val ListBoxComponent = rawForwardRef<HTMLDivElement, HTMLAttributes<HTMLElement>> { props, ref ->
+    val children = props.children.unsafeCast<Array<ReactNode>>()
+    val itemData = children.flatMap { item ->
+        listOf(item) + (item.asDynamic().children as? Array<ReactNode>).orEmpty()
+    }
+
+    val itemCount = itemData.size
+    val itemSize = 48
+    val getChildSize = { child: ReactNode -> itemSize }
+    val getHeight = {
+        if (itemCount > 8) 8 * itemSize
+        else itemData.map(getChildSize).sum()
+    }
+
+    val gridRef = useResetCache(itemCount)
+
+    div.create {
+        this.ref = ref
+        OuterElementContext.Provider {
+            value = props
+
+            @Suppress("UPPER_BOUND_VIOLATED")
+            VariableSizeList {
+                this.itemData = itemData
+                height = number((getHeight() + 12.0))
+                width = 100.pct
+                this.ref = gridRef
+                outerElementType = OuterElementType
+                innerElementType = "ul"
+                this.itemSize = { i -> number(getChildSize(itemData[i]).toDouble()) }
+                overscanCount = 5
+                this.itemCount = itemCount
+                this.children = "li".unsafeCast<ReactNode>()
+            }
+        }
+    }
+}
 
 external interface ApiAutocompleteProps<Item: Any> : Props {
     var label: String
@@ -20,18 +92,17 @@ external interface ApiAutocompleteProps<Item: Any> : Props {
     var fetch: suspend () -> List<Item>
 
     var comparator: ((Item, Item) -> Boolean)?
-    var filter: (Item, String) -> Boolean
     var represent: ((Item) -> String)?
 
-    var dialog: FC<ApiAutocompleteDialogProps>
+    var dialog: FC<ApiAutocompleteDialogProps<Item>>
 }
 val ApiAutocomplete = FC<ApiAutocompleteProps<out Any>> { rawProps ->
     val props = rawProps.unsafeCast<ApiAutocompleteProps<Any>>()
 
     var counter by useState(0)
     var allValues by useState(emptyArray<Any>())
-//    var isOpen by useState(false)
     var isLoading by useState(true)
+
     LaunchedEffect(counter) {
         isLoading = true
         // TODO is error handing
@@ -43,9 +114,9 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<out Any>> { rawProps ->
 
     val represent = { item: Any -> props.represent?.invoke(item) ?: item.toString() }
     Box {
-        sx = jso {
+        sx {
             display = Display.flex
-            flexGrow = FlexGrow(1.0)
+            flexGrow = number(1.0)
             flexDirection = FlexDirection.row
             alignContent = AlignContent.center
             alignItems = AlignItems.center
@@ -53,52 +124,30 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<out Any>> { rawProps ->
 
         @Suppress("UPPER_BOUND_VIOLATED")
         Autocomplete<AutocompleteProps<Any>> {
-            sx = jso { flexGrow = FlexGrow(1.0) }
+            sx { flexGrow = number(1.0) }
 
             options = allValues
+            value = props.value.toTypedArray()
+
             freeSolo = true
             multiple = true
             clearOnBlur = true
-            value = props.value.toTypedArray()
             loading = isLoading
-            loadingText = ReactNode("231")
-
-//            open = isOpen
-//            onOpen = { isOpen = true }
-//            onClose = { _, _ -> isOpen = false }
+            loadingText = ReactNode("Loading...")
+            noOptionsText = ReactNode("Nothing here")
 
             isOptionEqualToValue = { option, value ->
                 props.comparator?.invoke(option, value) ?: (option == value)
-            }
-            filterOptions = { list, filter ->
-                list.filter { props.filter(it, filter.inputValue) }.toTypedArray()
             }
             getOptionLabel = { item -> represent(item) }
             renderInput = { params ->
                 TextField.create {
                     +params
                     label = ReactNode(props.label)
-                    if (isLoading) asDynamic().InputProps = jso<InputProps> {
-                        endAdornment = Fragment.create {
-                            CircularProgress {
-                                color = CircularProgressColor.inherit
-                                size = 20
-                            }
-                        }
-                    }
-                }
-
-            }
-            renderOption = { props, item, _ ->
-                li.create {
-                    +props
-                    +represent(item)
                 }
             }
-            onChange = { event, newValue, reason, details ->
+            onChange = { event, newValue, reason, _ ->
                 event.preventDefault()
-                console.log(reason)
-                console.log(newValue)
                 when (reason) {
                     AutocompleteChangeReason.createOption -> {
                         val input = (newValue as? Array<String>)?.lastOrNull().orEmpty()
@@ -114,13 +163,20 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<out Any>> { rawProps ->
                     else -> {}
                 }
             }
+
+            disableListWrap = true
+            ListboxComponent = ListBoxComponent
         }
+
 
         IconButton {
             sx = jso { marginLeft = 8.px }
             onClick = { dialogInput = "" }
             size = Size.large
-            AddCircle()
+            if (isLoading) CircularProgress {
+                color = CircularProgressColor.inherit
+                size = 20
+            } else AddCircle()
         }
     }
 
@@ -133,11 +189,13 @@ val ApiAutocomplete = FC<ApiAutocompleteProps<out Any>> { rawProps ->
                 if (refresh) counter += 1
                 dialogInput = null
             }
+            add = { item -> props.onChange(props.value + item) }
         }
     }
 }
 
-external interface ApiAutocompleteDialogProps : Props {
+external interface ApiAutocompleteDialogProps<Item: Any> : Props {
     var input: String
     var dismiss: (refresh: Boolean) -> Unit
+    var add: (item: Item) -> Unit
 }

@@ -1,63 +1,60 @@
 package component.autocomplete
 
-import csstype.*
+import csstype.px
 import domain.api.ApiService
 import domain.base.useScope
-import domain.koin.get
 import domain.koin.inject
 import domain.onValueChanged
+import domain.update
 import kotlinx.coroutines.launch
 import kotlinx.js.jso
-import model.user.UserTag
+import model.api.catalog.Catalog
+import model.api.category.Category
+import model.common.intIdComparator
 import mui.material.*
 import mui.system.ResponsiveStyleValue
 import react.*
 import react.dom.html.ButtonType
 import react.dom.html.InputType
-import react.dom.html.ReactHTML.form
+import react.dom.html.ReactHTML
 
-external interface UserTagAutocompleteProps : Props {
-    var initialTags: Set<UserTag>?
-    var onTagChange: (Set<UserTag>) -> Unit
+external interface CategoryAutocompleteProps : Props {
+    var value: Set<Category>
+    var onChange: (Set<Category>) -> Unit
 }
-val UserTagAutocomplete = FC<UserTagAutocompleteProps> { props ->
-    val service = get<ApiService>()
+val CategoryAutocomplete = FC<CategoryAutocompleteProps> { props ->
+    val service by inject<ApiService>()
     @Suppress("UPPER_BOUND_VIOLATED")
-    ApiAutocomplete<ApiAutocompleteProps<UserTag>> {
-        label = "Tags"
-        value = props.initialTags.orEmpty()
+    ApiAutocomplete<ApiAutocompleteProps<Category>> {
+        label = "Categories"
+        value = props.value
+        onChange = props.onChange
 
-        fetch = { service.getUserTags() }
-        comparator = { t1, t2 -> t1.id == t2.id }
+        fetch = { service.category.getList() }
+        comparator = ::intIdComparator
         represent = { t -> t.name }
-
-        dialog = FC { props ->
-            FormDialog {
-                +props
-            }
-        }
+        dialog = FormDialog
     }
 }
-
-private external interface FormDialogProps : ApiAutocompleteDialogProps<Any>
-private val FormDialog = FC<FormDialogProps> { props ->
+private val FormDialog = FC<ApiAutocompleteDialogProps<Category>> { props ->
     val service by inject<ApiService>()
     val scope = useScope()
 
-    var name by useState("")
-    useEffect(props.input) { name = props.input }
+    val (category, update) = useState(Category(0, ""))
+    useEffect(props.input) { update.update { copy(name = props.input) } }
 
-    form {
+    ReactHTML.form {
         onSubmit = { e ->
             e.preventDefault()
             scope.launch {
-                service.addUserTag(UserTag(id = -1, name = name))
+                val new = service.category.add(category)
+                props.add(new)
                 props.dismiss(true)
             }
             e.stopPropagation()
         }
 
-        DialogTitle { +"Add tag" }
+        DialogTitle { +"Add Catalog" }
         DialogContent {
             Grid {
                 container = true
@@ -73,8 +70,8 @@ private val FormDialog = FC<FormDialogProps> { props ->
                         label = ReactNode("Name")
                         variant = FormControlVariant.outlined
                         type = InputType.text
-                        value = name
-                        onValueChanged { name = it }
+                        value = category.name
+                        onValueChanged { update.update { copy(name = it) } }
                     }
                 }
             }
@@ -91,3 +88,4 @@ private val FormDialog = FC<FormDialogProps> { props ->
         }
     }
 }
+

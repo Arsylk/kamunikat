@@ -42,7 +42,7 @@ val AdminPage = FC<Props> {
                 Size.large
                 position = AppBarPosition.fixed
                 sx = jso {
-                    zIndex = ZIndex(theme.zIndex.drawer.toInt() + 1)
+                    zIndex = integer(theme.zIndex.drawer.toInt() + 1)
                 }
                 Toolbar {
                     IconButton {
@@ -64,7 +64,7 @@ val AdminPage = FC<Props> {
                 variant = DrawerVariant.persistent
                 open = isDrawerOpen
                 sx = jso {
-                    flexShrink = FlexShrink(0.0)
+                    flexShrink = number(0.0)
                     width = 300.px
                 }
                 PaperProps = jso {
@@ -78,7 +78,7 @@ val AdminPage = FC<Props> {
                 DrawerContent()
             }
             Box {
-                sx = jso { flexGrow = FlexGrow(1.0) }
+                sx = jso { flexGrow = number(1.0) }
                 Toolbar()
                 Container {
                     Outlet()
@@ -91,7 +91,7 @@ val AdminPage = FC<Props> {
 private val DrawerContent = FC<Props> {
     val navigate = useNavigate()
     Box {
-        sx = jso { overflow = Overflow.auto }
+        sx = jso { overflow = Auto.auto }
         List {
             ListItemButton {
                 ListItemText {
