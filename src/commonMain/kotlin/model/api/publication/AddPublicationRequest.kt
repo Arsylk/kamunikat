@@ -14,4 +14,6 @@ data class AddPublicationRequest(
     val categoryIds: Set<Int> = emptySet(),
     @SerialName("author_ids")
     val authorIds: Set<Int> = emptySet(),
+    @SerialName("inventory_numbers")
+    val inventoryNumbers: Set<PublicationInventoryNumber> = emptySet(),
 )

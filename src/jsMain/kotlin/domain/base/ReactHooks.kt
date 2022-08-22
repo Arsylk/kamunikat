@@ -110,3 +110,10 @@ fun <Effect : UiEffect> EffectViewModel<Effect>.useUiEffect(
         }
     }
 }
+
+@FCScope
+inline fun <T> useStateCopy(initialValue: T, crossinline onChange: (T) -> Unit): StateInstance<T> {
+    val state = useState(initialValue)
+    useEffect(state.value) { onChange(state.value) }
+    return state
+}

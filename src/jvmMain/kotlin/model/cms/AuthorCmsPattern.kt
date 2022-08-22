@@ -9,7 +9,7 @@ import model.db.author.toCommon as toCommonExt
 object AuthorCmsPattern : DbCmsPattern<Author, CommonAuthor>() {
     override val intEntity = Author
 
-    override fun Author.intoEntity(item: CommonAuthor) {
+    override fun Author.intoEntity(item: model.api.author.Author, isNew: Boolean) {
         name = item.name
     }
 

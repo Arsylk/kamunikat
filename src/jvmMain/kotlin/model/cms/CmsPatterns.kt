@@ -7,9 +7,10 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 
-inline fun <reified Common: Any> Route.cmsPattern(
+inline fun <reified Common: Any, reified Pattern: CmsPattern<Common>> Route.cmsPattern(
     baseUrl: String,
-    pattern: CmsPattern<Common>
+    pattern: Pattern,
+    crossinline custom: Route.(Pattern) -> Unit = {}
 ) {
     route(baseUrl) {
         get("/list") {
@@ -44,5 +45,6 @@ inline fun <reified Common: Any> Route.cmsPattern(
                 call.respond(response)
             }
         }
+        custom(pattern)
     }
 }

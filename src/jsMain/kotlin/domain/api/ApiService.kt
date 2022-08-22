@@ -1,27 +1,30 @@
 package domain.api
 
+import domain.cms.PeriodicalCmsPattern
 import domain.cms.cmsPattern
 import io.ktor.client.*
 import io.ktor.client.request.*
 import model.api.PaginatedResponse
-import model.api.publication.Publication
-import model.api.publication.PublicationField
 import model.api.SuccessResponse
 import model.api.auth.login.LoginRequest
 import model.api.auth.login.LoginResponse
 import model.api.author.Author
 import model.api.catalog.Catalog
+import model.api.category.Category
+import model.api.publication.AddPublicationRequest
+import model.api.publication.Publication
+import model.api.publication.PublicationField
 import model.api.user.AddUserRequest
 import model.common.Order
 import model.user.User
 import model.user.UserField
 import model.user.UserTag
-import model.api.category.Category
 
 class ApiService(private val httpClient: HttpClient) {
     val catalog = httpClient.cmsPattern<Catalog>("/api/catalog")
     val author = httpClient.cmsPattern<Author>("/api/author")
     val category = httpClient.cmsPattern<Category>("/api/category")
+    val periodical = PeriodicalCmsPattern(httpClient, "/api/periodical")
 
     suspend fun login(email: String, password: String) =
         httpClient.post<LoginResponse>("/api/auth/login") {
@@ -58,5 +61,10 @@ class ApiService(private val httpClient: HttpClient) {
             parameter("per_page", perPage)
             parameter("order", order)
             parameter("order_select", orderSelect)
+        }
+
+    suspend fun addPublication(request: AddPublicationRequest) =
+        httpClient.post<Publication>("/api/publication") {
+            body = request
         }
 }

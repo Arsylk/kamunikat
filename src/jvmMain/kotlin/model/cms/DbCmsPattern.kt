@@ -6,9 +6,7 @@ import model.api.SuccessResponse
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -16,7 +14,7 @@ abstract class DbCmsPattern<Entity: IntEntity, Common: Any> : CmsPattern<Common>
     val db by inject<Database>()
     abstract val intEntity: IntEntityClass<Entity>
 
-    abstract fun Entity.intoEntity(item: Common)
+    abstract fun Entity.intoEntity(item: Common, isNew: Boolean)
 
     abstract fun Entity.toCommon(): Common
 
@@ -40,7 +38,7 @@ abstract class DbCmsPattern<Entity: IntEntity, Common: Any> : CmsPattern<Common>
 
     override suspend fun add(item: Common): Common {
         val newItem = newSuspendedTransaction(db = db) {
-            intEntity.new { intoEntity(item) }
+            intEntity.new { intoEntity(item, isNew = true) }
         }
         return newSuspendedTransaction(db = db) {
             intEntity.getQuery(newItem.idInt).toCommon()
@@ -50,7 +48,7 @@ abstract class DbCmsPattern<Entity: IntEntity, Common: Any> : CmsPattern<Common>
     override suspend fun update(id: Int, item: Common): SuccessResponse {
         val result = kotlin.runCatching {
             newSuspendedTransaction(db = db) {
-                intEntity.getQuery(id).apply { intoEntity(item) }
+                intEntity.getQuery(id).apply { intoEntity(item, isNew = false) }
             }
         }
         return SuccessResponse(result)

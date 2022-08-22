@@ -9,7 +9,7 @@ import model.common.Sortable
 @kotlinx.serialization.Serializable
 data class Publication(
     @SerialName("id")
-    override val id: Int,
+    override val id: Int = IntId.Default,
     @SerialName("is_published")
     val isPublished: Boolean,
     @SerialName("is_periodical")

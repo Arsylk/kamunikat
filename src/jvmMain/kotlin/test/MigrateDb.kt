@@ -1,8 +1,7 @@
 package test
 
+import domain.db.changeUpdatedAt
 import domain.koin.setupKoinPlatform
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import model.db.aphorism.Aphorisms
 import model.db.author.AuthorAliases
 import model.db.author.AuthorContents
@@ -18,11 +17,10 @@ import model.db.user.Users
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
-import javax.sql.DataSource
+
 
 fun main(args: Array<String>) {
     val koin = KoinApplication.init()
@@ -57,9 +55,15 @@ private val tables = listOf<Table>(
     PublicationInventoryNumbers,
     Users, UserTags, UserTagXrefs,
 )
+private val updateAts = mapOf(
+    Publications to Publications.updatedAt
+)
 
 private fun createSchema(db: Database) = transaction(db) {
     SchemaUtils.create(*tables.toTypedArray())
+    updateAts.forEach { (table, column) ->
+        SchemaUtils.changeUpdatedAt(table, column)
+    }
 }
 
 interface IMigrate {

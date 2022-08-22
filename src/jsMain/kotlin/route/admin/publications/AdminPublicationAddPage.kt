@@ -3,36 +3,31 @@ package route.admin.publications
 import component.autocomplete.AuthorAutocomplete
 import component.autocomplete.CatalogAutocomplete
 import component.autocomplete.CategoryAutocomplete
+import component.autocomplete.PeriodicalAutocomplete
+import component.group.InventoryNumberGroup
+import component.input.*
 import csstype.Padding
 import csstype.em
 import csstype.number
-import domain.onValueChanged
-import domain.update
-import domain.use
+import domain.base.useStateCopy
 import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinInstant
-import kotlinx.js.jso
-import model.api.publication.Publication
 import model.api.author.Author
 import model.api.catalog.Catalog
+import model.api.category.Category
+import model.api.periodical.Periodical
 import model.api.publication.AddPublicationRequest
+import model.api.publication.Publication
+import model.api.publication.PublicationInventoryNumber
 import model.common.ids
-import mui.lab.DatePicker
-import mui.lab.LocalizationProvider
 import mui.material.*
 import mui.system.ResponsiveStyleValue
-import npm.date.fns.localePl
-import npm.mui.lab.AdapterDateFns
+import mui.system.sx
 import react.*
 import react.dom.html.ButtonType
-import react.dom.html.InputType
 import react.dom.html.ReactHTML
 import react.router.RouteProps
 import route.Route
 import route.admin.AdminPageRoute
-import kotlin.js.Date
-import model.api.category.Category
 
 object AdminPublicationAddPageRoute : Route {
     override val path = "publication/add"
@@ -43,9 +38,8 @@ object AdminPublicationAddPageRoute : Route {
 }
 
 val AdminPublicationAddPage = FC<Props> {
-    val (pub, update) = useState {
+    var pub by useRefValue(
         Publication(
-            id = 0,
             isPublished = false,
             isPeriodical = false,
             isPlanned = false,
@@ -79,22 +73,26 @@ val AdminPublicationAddPage = FC<Props> {
             createdAt = Clock.System.now(),
             updatedAt = Clock.System.now(),
         )
+    )
+    var authors by useState(emptySet<Author>())
+    var catalogs by useState(emptySet<Catalog>())
+    var categories by useState(emptySet<Category>())
+    var periodicals by useState(emptySet<Periodical>())
+    var invNum by useState(emptySet<PublicationInventoryNumber>())
+
+    var isPeriodical by useStateCopy(pub.isPeriodical) {
+        pub = pub.copy(isPeriodical = it)
+        if (!it) periodicals = emptySet()
     }
-    val (addPub, addUpdate) = useState {
-        AddPublicationRequest(publication = pub)
-    }
-    useEffect(pub) { addUpdate.update { copy(publication = pub) } }
 
 
     Box {
-        sx = jso {
+        sx {
             flexGrow = number(1.0)
             padding = Padding(2.em, 2.em)
         }
         Paper {
-            sx = jso {
-                padding = Padding(1.em, 1.em)
-            }
+            sx { padding = Padding(1.em, 1.em) }
             Typography {
                 component = ReactHTML.h1
                 variant = "h5"
@@ -105,7 +103,15 @@ val AdminPublicationAddPage = FC<Props> {
                 component = ReactHTML.form
                 onSubmit = { event ->
                     event.preventDefault()
-                    console.log(pub)
+                    val new = AddPublicationRequest(
+                        publication = pub,
+                        periodicalIds = periodicals.ids,
+                        catalogIds = catalogs.ids,
+                        categoryIds = categories.ids,
+                        authorIds = authors.ids,
+                        inventoryNumbers = invNum,
+                    )
+                    console.log(new)
                 }
 
                 Grid {
@@ -118,8 +124,8 @@ val AdminPublicationAddPage = FC<Props> {
                         xs = 3
                         BaseCheckbox {
                             label = "Published"
-                            isChecked = pub.isPublished
-                            onChange = { update.update { copy(isPublished = it) } }
+                            initialValue = false
+                            onChange = { pub = pub.copy(isPublished = it) }
                         }
                     }
                     Grid {
@@ -127,8 +133,8 @@ val AdminPublicationAddPage = FC<Props> {
                         xs = 3
                         BaseCheckbox {
                             label = "Periodical"
-                            isChecked = pub.isPeriodical
-                            onChange = { update.update { copy(isPeriodical = it) } }
+                            value = isPeriodical
+                            onChange = { isPeriodical = it }
                         }
                     }
                     Grid {
@@ -136,8 +142,8 @@ val AdminPublicationAddPage = FC<Props> {
                         xs = 3
                         BaseCheckbox {
                             label = "Planned"
-                            isChecked = pub.isPlanned
-                            onChange = { update.update { copy(isPlanned = it) } }
+                            initialValue = false
+                            onChange = { pub = pub.copy(isPlanned = it) }
                         }
                     }
                     Grid {
@@ -145,8 +151,8 @@ val AdminPublicationAddPage = FC<Props> {
                         xs = 3
                         BaseCheckbox {
                             label = "Licenced"
-                            isChecked = pub.isLicenced
-                            onChange = { update.update { copy(isLicenced = it) } }
+                            initialValue = false
+                            onChange = { pub = pub.copy(isLicenced = it) }
                         }
                     }
 
@@ -155,8 +161,8 @@ val AdminPublicationAddPage = FC<Props> {
                         xs = 12
                         BaseNumberField {
                             label = "Position"
-                            value = pub.position
-                            onChange = { update.update { copy(position = it) } }
+                            initialValue = pub.position
+                            onChange = { pub = pub.copy(position = it) }
                         }
                     }
 
@@ -169,8 +175,8 @@ val AdminPublicationAddPage = FC<Props> {
                             limit = 255
                             required = true
 
-                            value = pub.title
-                            onChange = { update.update { copy(title = it) } }
+                            initialValue = pub.title
+                            onChange = { pub = pub.copy(title = it) }
                         }
                     }
                     Grid {
@@ -180,8 +186,8 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Subtitle"
                             limit = 255
 
-                            value = pub.subtitle
-                            onChange = { update.update { copy(subtitle = it) } }
+                            initialValue = pub.subtitle
+                            onChange = { pub = pub.copy(subtitle = it) }
                         }
                     }
                     Grid {
@@ -191,17 +197,13 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Original Title"
                             limit = 255
 
-                            value = pub.originalTitle
-                            onChange = { update.update { copy(originalTitle = it) } }
+                            initialValue = pub.originalTitle
+                            onChange = { pub = pub.copy(originalTitle = it) }
                         }
                     }
                     Grid {
                         item = true
                         xs = 12
-                        var authors by useState(emptySet<Author>())
-                        useEffect(authors) {
-                            addUpdate.update { copy(authorIds = authors.ids) }
-                        }
                         AuthorAutocomplete {
                             value = authors
                             onChange = { authors = it }
@@ -214,8 +216,8 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Co Author"
                             limit = 255
 
-                            value = pub.coAuthor
-                            onChange = { update.update { copy(coAuthor = it) } }
+                            initialValue = pub.coAuthor
+                            onChange = { pub = pub.copy(coAuthor = it) }
                         }
                     }
                     Grid {
@@ -225,8 +227,8 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Translator"
                             limit = 255
 
-                            value = pub.translator
-                            onChange = { update.update { copy(translator = it) } }
+                            initialValue = pub.translator
+                            onChange = { pub = pub.copy(translator = it) }
                         }
                     }
 
@@ -237,8 +239,8 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Edition"
                             limit = 63
 
-                            value = pub.edition
-                            onChange = { update.update { copy(edition = it) } }
+                            initialValue = pub.edition
+                            onChange = { pub = pub.copy(edition = it) }
                         }
                     }
                     Grid {
@@ -248,8 +250,8 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Volume"
                             limit = 31
 
-                            value = pub.volume
-                            onChange = { update.update { copy(volume = it) } }
+                            initialValue = pub.volume
+                            onChange = { pub = pub.copy(volume = it) }
                         }
                     }
                     Grid {
@@ -259,8 +261,19 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Redactor"
                             limit = 63
 
-                            value = pub.redactor
-                            onChange = { update.update { copy(redactor = it) } }
+                            initialValue = pub.redactor
+                            onChange = { pub = pub.copy(redactor = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "College"
+                            limit = 255
+
+                            initialValue = pub.college
+                            onChange = {  pub = pub.copy(college = it) }
                         }
                     }
                     Grid {
@@ -270,8 +283,8 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Illustrator"
                             limit = 255
 
-                            value = pub.illustrator
-                            onChange = { update.update { copy(illustrator = it) } }
+                            initialValue = pub.illustrator
+                            onChange = { pub = pub.copy(illustrator = it) }
                         }
                     }
 
@@ -282,8 +295,8 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Place"
                             limit = 127
 
-                            value = pub.place
-                            onChange = { update.update { copy(place = it) } }
+                            initialValue = pub.place
+                            onChange = { pub = pub.copy(place = it) }
                         }
                     }
                     Grid {
@@ -293,26 +306,22 @@ val AdminPublicationAddPage = FC<Props> {
                             label = "Series"
                             limit = 255
 
-                            value = pub.series
-                            onChange = { update.update { copy(series = it) } }
+                            initialValue = pub.series
+                            onChange = { pub = pub.copy(series = it) }
                         }
                     }
-                    Grid {
-                        item = true
-                        xs = 12
-                        BaseDateField {
-                            label = "Year"
-                            value = pub.year
-                            onChange = { update.update { copy(year = it) } }
-                        }
-                    }
-
-
                     Grid {
                         item = true
                         xs = 6
-                        var catalogs by useState(emptySet<Catalog>())
-                        useEffect(catalogs) { addUpdate.update { copy(catalogIds = catalogs.ids) } }
+                        BaseDateField {
+                            label = "Year"
+                            initialValue = pub.year
+                            onChange = { pub = pub.copy(year = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 6
                         CatalogAutocomplete {
                             value = catalogs
                             onChange = { catalogs = it }
@@ -320,14 +329,162 @@ val AdminPublicationAddPage = FC<Props> {
                     }
                     Grid {
                         item = true
-                        xs = 6
-                        var categories by useState(emptySet<Category>())
-                        useEffect(categories) { addUpdate.update { copy(categoryIds = categories.ids) } }
+                        xs = 12
                         CategoryAutocomplete {
                             value = categories
                             onChange = { categories = it }
                         }
                     }
+                    Grid {
+                        item = true
+                        xs = 12
+                        hidden = !isPeriodical
+                        PeriodicalAutocomplete {
+                            value = periodicals
+                            onChange = { periodicals = it }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "Publishing House"
+                            limit = 255
+
+                            initialValue = pub.publishingHouse
+                            onChange = { pub = pub.copy(publishingHouse = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "Publisher"
+                            limit = 511
+
+                            initialValue = pub.publisher
+                            onChange = { pub = pub.copy(publisher = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "Dimensions"
+                            limit = 31
+
+                            initialValue = pub.dimensions
+                            onChange = { pub = pub.copy(dimensions = it) }
+                        }
+                    }
+
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "Signature"
+                            limit = 31
+
+                            initialValue = pub.signature
+                            onChange = { pub = pub.copy(signature = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "isbn"
+                            limit = 63
+
+                            initialValue = pub.isbn
+                            onChange = { pub = pub.copy(isbn = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "issn"
+                            limit = 63
+
+                            initialValue = pub.issn
+                            onChange = { pub = pub.copy(issn = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "ukd"
+                            limit = 255
+
+                            initialValue = pub.ukd
+                            onChange = { pub = pub.copy(ukd = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "Copyright"
+                            limit = 255
+
+                            initialValue = pub.copyright
+                            onChange = { pub = pub.copy(copyright = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "Shop Url"
+                            limit = 255
+
+                            initialValue = pub.shopUrl
+                            onChange = { pub = pub.copy(shopUrl = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseTextField {
+                            label = "Origin"
+                            limit = 255
+
+                            initialValue = pub.origin
+                            onChange = { pub = pub.copy(origin = it) }
+                        }
+                    }
+
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseMultilineField {
+                            label = "Extra"
+                            initialValue = pub.extra
+                            onChange = { pub = pub.copy(extra = it) }
+                        }
+                    }
+                    Grid {
+                        item = true
+                        xs = 12
+                        BaseMultilineField {
+                            label = "Description"
+                            initialValue = pub.description
+                            onChange = { pub = pub.copy(description = it) }
+                        }
+                    }
+
+                    Grid {
+                        item = true
+                        xs = 12
+                        InventoryNumberGroup {
+                            publicationId = pub.id
+                            value = invNum
+                            onChange = { invNum = it }
+                        }
+                    }
+
                     Grid {
                         container = true
                         direction = ResponsiveStyleValue(GridDirection.rowReverse)
@@ -339,119 +496,6 @@ val AdminPublicationAddPage = FC<Props> {
                                 variant = ButtonVariant.contained
                                 +"Add"
                             }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-private external interface BaseCheckboxProps : Props {
-    var label: String
-    var isChecked: Boolean
-    var onChange: (Boolean) -> Unit
-}
-private val BaseCheckbox = FC<BaseCheckboxProps> { props ->
-    FormControlLabel {
-        label = ReactNode(props.label)
-        control = Checkbox.create {
-            checked = props.isChecked
-            onChange = { _, checked ->
-                props.onChange(checked)
-            }
-        }
-    }
-}
-
-private external interface BaseTextFieldProps : Props {
-    var label: String
-    var value: String
-    var onChange: (String) -> Unit
-    var required: Boolean?
-    var limit: Int?
-}
-private val BaseTextField = FC<BaseTextFieldProps> { props ->
-    TextField {
-        fullWidth = true
-        required = props.required == true
-        label = ReactNode(props.label)
-        type = InputType.text
-        use(props.limit) { limit ->
-            inputProps = jso<dynamic> { maxLength = limit }.unsafeCast<InputBaseComponentProps>()
-        }
-        value = props.value
-        onValueChanged(props.onChange)
-    }
-}
-
-private external interface BaseNumberFieldProps : Props {
-    var label: String
-    var value: Int
-    var onChange: (Int) -> Unit
-    var required: Boolean?
-}
-private val BaseNumberField = FC<BaseNumberFieldProps> { props ->
-    TextField {
-        fullWidth = true
-        required = props.required == true
-        label = ReactNode(props.label)
-        type = InputType.number
-        value = props.value
-        onValueChanged { props.onChange(it.toIntOrNull() ?: return@onValueChanged) }
-    }
-}
-
-private external interface BaseDateFieldProps : Props {
-    var label: String
-    var value: LocalDate?
-    var onChange: (LocalDate?) -> Unit
-}
-private val BaseDateField = FC<BaseDateFieldProps> { props ->
-    LocalizationProvider {
-        dateAdapter = AdapterDateFns
-        locale = localePl
-
-        var jsDate by useState<Date?>(null)
-        useEffect(props.value) {
-            jsDate = use(props.value) {
-                Date(year = it.year, month = it.monthNumber - 1, day = it.dayOfMonth)
-            }
-        }
-
-
-        DatePicker {
-            asDynamic().value = jsDate
-
-            asDynamic().mask = "__.__.____"
-            asDynamic().label = props.label
-            asDynamic().onChange = { any: dynamic ->
-                when (any) {
-                    is Date -> {
-                        if (!any.getTime().isNaN()) {
-                            props.onChange(
-                                LocalDate(any.getFullYear(), any.getMonth() + 1, any.getDate())
-                            )
-                        }
-                    }
-                    else -> props.onChange(null)
-                }
-            }
-            asDynamic().renderInput = { params: Props ->
-                TextField.create {
-                    +params
-                    onBlur = {
-                        val currentString = params.asDynamic().inputProps.value
-                            .unsafeCast<String?>().orEmpty()
-                        currentString.runCatching {
-                            LocalDate(
-                                year = substring(6..9).toInt(),
-                                monthNumber = substring(3..4).toInt(),
-                                dayOfMonth = substring(0..1).toInt(),
-                            )
-                        }.onFailure {
-                            jsDate = null
-                            props.onChange(null)
                         }
                     }
                 }

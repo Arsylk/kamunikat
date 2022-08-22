@@ -1,6 +1,8 @@
 package model.db.publication
 
+import domain.db.createdAt
 import domain.db.idInt
+import domain.db.updatedAt
 import model.db.author.Author
 import model.db.catalog.Catalog
 import model.db.category.Category
@@ -10,7 +12,6 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.kotlin.datetime.date
-import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 import model.api.publication.Publication as CommonPublication
 
 object Publications : IntIdTable("publication") {
@@ -50,12 +51,12 @@ object Publications : IntIdTable("publication") {
     val extra = text("extra")
     val description = text("description")
 
-    val legacyAuthor = varchar("legacy_author", length = 255)
-    val legacyCatalog = varchar("legacy_catalog", length = 127)
-    val legacyInventoryNumber = varchar("legacy_inventory_number", length = 127)
+    val legacyAuthor = varchar("legacy_author", length = 255).default("")
+    val legacyCatalog = varchar("legacy_catalog", length = 127).default("")
+    val legacyInventoryNumber = varchar("legacy_inventory_number", length = 127).default("")
 
-    val createdAt = timestamp("created_at")
-    val updatedAt = timestamp("updated_at")
+    val createdAt = createdAt()
+    val updatedAt = updatedAt()
 }
 
 class Publication(id: EntityID<Int>) : IntEntity(id) {

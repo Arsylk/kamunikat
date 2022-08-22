@@ -7,7 +7,7 @@ import model.db.catalog.toCommon as toCommonExt
 object CatalogCmsPattern : DbCmsPattern<Catalog, CommonCatalog>() {
     override val intEntity = Catalog
 
-    override fun Catalog.intoEntity(item: CommonCatalog) {
+    override fun Catalog.intoEntity(item: model.api.catalog.Catalog, isNew: Boolean) {
         name = item.name
         letter = item.letter
         hasInventory = item.hasInventory

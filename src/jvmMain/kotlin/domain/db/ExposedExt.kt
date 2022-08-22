@@ -3,6 +3,7 @@ package domain.db
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.ResultSet
@@ -45,3 +46,5 @@ fun <T : Comparable<T>, R : Entity<T>> EntityClass<T, R>.new(
     id: T?,
     init: R.() -> Unit,
 ) = transaction(db) { new(id, init) }
+
+inline fun <reified T: IntEntity> IntEntityClass<T>.forIds(ids: Collection<Int>) = forIds(ids.toList())

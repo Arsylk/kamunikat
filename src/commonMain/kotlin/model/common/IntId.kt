@@ -2,6 +2,10 @@ package model.common
 
 interface IntId {
     val id: Int
+
+    companion object {
+        const val Default = 0
+    }
 }
 
 inline val Collection<IntId>.ids get() = map { it.id }.toSet()

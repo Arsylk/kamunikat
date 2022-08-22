@@ -7,7 +7,7 @@ import model.api.category.Category as CommonCategory
 object CategoryCmsPattern : DbCmsPattern<Category, CommonCategory>() {
     override val intEntity = Category
 
-    override fun Category.intoEntity(item: CommonCategory) {
+    override fun Category.intoEntity(item: model.api.category.Category, isNew: Boolean) {
         name = item.name
     }
 
